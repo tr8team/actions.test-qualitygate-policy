@@ -57,6 +57,8 @@ const historyEntry = object({
 const history = array(historyEntry);
 
 type Input = z.infer<typeof input>;
+declare let x: Input;
+type MetadataEnum = typeof x.data.type;
 type InputArray = z.infer<typeof inputArray>;
 type HistoryEntry = z.infer<typeof historyEntry>;
 type History = z.infer<typeof history>;
@@ -70,6 +72,7 @@ type TestResultMetadata = z.infer<typeof testResultMetadata>;
 export { metadata, input, inputArray, historyEntry, history };
 
 export type {
+  MetadataEnum,
   TestCoverageMetadata,
   DocumentMetadata,
   CodeQualityMetadata,

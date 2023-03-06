@@ -8,14 +8,7 @@ import {
   union,
   z,
 } from "zod";
-
-const anyCoveragePolicy = object({
-  type: literal("any-coverage-policy"),
-  warn: number().min(0).max(100),
-  fail: number().min(0).max(100),
-})
-  .required()
-  .strict();
+import { anyCoveragePolicy } from "./policy/any-coverage-policy";
 
 const anyDeltaCoveragePolicy = object({
   type: literal("any-delta-coverage-policy"),
