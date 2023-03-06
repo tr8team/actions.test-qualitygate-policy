@@ -1,10 +1,10 @@
 import {
   array,
-  object,
+  discriminatedUnion,
   literal,
   number,
+  object,
   string,
-  discriminatedUnion,
   z,
 } from "zod";
 
@@ -61,6 +61,22 @@ type InputArray = z.infer<typeof inputArray>;
 type HistoryEntry = z.infer<typeof historyEntry>;
 type History = z.infer<typeof history>;
 
+type Metadata = z.infer<typeof metadata>;
+type TestCoverageMetadata = z.infer<typeof testCoverageMetadata>;
+type DocumentMetadata = z.infer<typeof documentationMetadata>;
+type CodeQualityMetadata = z.infer<typeof codeQualityMetadata>;
+type TestResultMetadata = z.infer<typeof testResultMetadata>;
+
 export { metadata, input, inputArray, historyEntry, history };
 
-export type { Input, InputArray, HistoryEntry, History };
+export type {
+  TestCoverageMetadata,
+  DocumentMetadata,
+  CodeQualityMetadata,
+  TestResultMetadata,
+  Metadata,
+  Input,
+  InputArray,
+  HistoryEntry,
+  History,
+};
