@@ -1,11 +1,23 @@
-name: "Your name here"
-description: "Provide a description here"
-author: "Your name or organization here"
+name: "Test Quality Gate Policies"
+description: "Define policies to control target"
+author: "kirinnee"
 inputs:
-  milliseconds: # change this
+  current:
     required: true
-    description: "input description here"
+    description: "Current commit metadata"
+  base:
+    required: false
+    description: "Base commit metadata"
+  history:
+    required: true
+    description: "History metadatas for this PR"
+  policies:
+    required: true
+    description: "Quality Gate policies"
     default: "default value if applicable"
+outputs:
+  markdown:
+    description: "Markdown output"
 runs:
   using: "node16"
   main: "dist/index.js"

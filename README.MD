@@ -23,9 +23,28 @@ jobs:
 
 <!-- prettier-ignore-start -->
 <!-- action-docs-inputs -->
+## Inputs
+
+| parameter | description | required | default |
+| --- | --- | --- | --- |
+| current | Current commit metadata | `true` |  |
+| base | Base commit metadata | `false` |  |
+| history | History metadatas for this PR | `true` |  |
+| policies | Quality Gate policies | `true` | default value if applicable |
+<!-- action-docs-inputs -->
 
 <!-- action-docs-outputs -->
+## Outputs
 
+| parameter | description |
+| --- | --- |
+| markdown | Markdown output |
+<!-- action-docs-outputs -->
+
+<!-- action-docs-runs -->
+## Runs
+
+This action is a `node16` action.
 <!-- action-docs-runs -->
 
 <!-- prettier-ignore-end -->
