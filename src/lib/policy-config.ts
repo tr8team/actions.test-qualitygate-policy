@@ -135,7 +135,7 @@ const policyTypes = discriminatedUnion("type", [
   minPercentageTestPolicy,
 ]);
 
-const policy = object({
+const policyConfig = object({
   name: string(),
   target: string(),
   data: policyTypes,
@@ -143,11 +143,11 @@ const policy = object({
   .required()
   .strict();
 
-const policies = array(policy);
+const policyConfigs = array(policyConfig);
 
-type Policy = z.infer<typeof policy>;
-type Policies = z.infer<typeof policies>;
+type PolicyConfig = z.infer<typeof policyConfig>;
+type PolicyConfigs = z.infer<typeof policyConfigs>;
 
-export { policy, policies };
+export { policyConfig, policyConfigs };
 
-export type { Policy, Policies };
+export type { PolicyConfig, PolicyConfigs };

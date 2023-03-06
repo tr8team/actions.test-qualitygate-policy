@@ -1,13 +1,12 @@
 import { describe, it, should } from "vitest";
 import { SafeParseError, SafeParseSuccess } from "zod";
-import { input, Input } from "../../src/lib/history";
-import { policy, Policy } from "../../src/lib/policy";
+import { policyConfig, PolicyConfig } from "../../src/lib/policy-config";
 
 should();
 
 describe("input validator", () => {
   describe("valid objects", () => {
-    const theory: { subject: any; expected: Policy }[] = [
+    const theory: { subject: any; expected: PolicyConfig }[] = [
       {
         subject: {
           name: "No Fail Test",
@@ -265,7 +264,7 @@ describe("input validator", () => {
     theory.forEach(({ subject, expected }) => {
       it("should return the validated object and no error object", () => {
         // act
-        const act = policy.safeParse(subject) as SafeParseSuccess<Policy>;
+        const act = policyConfig.safeParse(subject) as SafeParseSuccess<PolicyConfig>;
         act.success.should.be.true;
         act.data.should.deep.equal(expected);
 
@@ -311,7 +310,7 @@ describe("input validator", () => {
       ];
       theory.forEach(({ subject, expected }) => {
         it(`for subject ${JSON.stringify(subject)} error should be ${JSON.stringify(expected)}`, () => {
-          const act = policy.safeParse(subject) as SafeParseError<Policy>;
+          const act = policyConfig.safeParse(subject) as SafeParseError<PolicyConfig>;
           act.success.should.be.false;
           act.error.issues.should.deep.equal(expected.issues);
         });
@@ -373,7 +372,7 @@ describe("input validator", () => {
       ];
       theory.forEach(({ subject, expected }) => {
         it(`for subject ${JSON.stringify(subject)} error should be ${expected}`, () => {
-          const act = policy.safeParse(subject) as SafeParseError<Policy>;
+          const act = policyConfig.safeParse(subject) as SafeParseError<PolicyConfig>;
           act.success.should.be.false;
           act.error.issues.should.deep.equal(expected.issues);
         });
@@ -435,7 +434,7 @@ describe("input validator", () => {
       ];
       theory.forEach(({ subject, expected }) => {
         it(`for subject ${JSON.stringify(subject)} error should be ${expected}`, () => {
-          const act = policy.safeParse(subject) as SafeParseError<Policy>;
+          const act = policyConfig.safeParse(subject) as SafeParseError<PolicyConfig>;
           act.success.should.be.false;
           act.error.issues.should.deep.equal(expected.issues);
         });
@@ -785,7 +784,7 @@ describe("input validator", () => {
       ];
       theory.forEach(({ subject, expected }) => {
         it(`for subject ${JSON.stringify(subject)} error should be ${expected}`, () => {
-          const act = policy.safeParse(subject) as SafeParseError<Policy>;
+          const act = policyConfig.safeParse(subject) as SafeParseError<PolicyConfig>;
           act.success.should.be.false;
           act.error.issues.should.deep.equal(expected.issues);
         });
