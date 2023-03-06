@@ -44,7 +44,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT_NAME: '{{{ (datasource "config").unit_test_report }}}'
+          PROJECT_NAME: 'report-unit-test-tr8team-actionstest-qualitygate'
           DIRECTORY: test-results/unit/html
 
       - name: Publish Coverage Result
@@ -53,7 +53,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT_NAME: '{{{ (datasource "config").unit_test_coverage }}}'
+          PROJECT_NAME: 'coverage-unit-test-tr8team-actionstest-qualitygate'
           DIRECTORY: test-results/unit/coverage
 
       - name: Unit Test Extractor
@@ -120,7 +120,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT_NAME: '{{{ (datasource "config").int_test_report }}}'
+          PROJECT_NAME: 'report-int-test-tr8team-actionstest-qualitygate'
           DIRECTORY: test-results/int/html
 
       - name: Publish Coverage Result
@@ -129,7 +129,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT_NAME: '{{{ (datasource "config").int_test_coverage }}}'
+          PROJECT_NAME: 'coverage-int-test-tr8team-actionstest-qualitygate'
           DIRECTORY: test-results/int/coverage
 
       - name: Integration Test Extractor
@@ -179,9 +179,9 @@ jobs:
               ${{needs.IntegrationTest.outputs.testResult}},
               ${{needs.IntegrationTest.outputs.testCoverage}}
             ]
-          gist_id: '{{{ (datasource "config").gist_id }}}'
+          gist_id: '0490941d330cdfbb129825fa63d5e3b5'
           github_token: ${{ secrets.GIST_TOKEN }}
-          prefix: '{{{ (datasource "config").prefix }}}'
+          prefix: 'tr8team-actionstest-qualitygate-'
   Build:
     runs-on:
       - nix
