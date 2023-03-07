@@ -11,21 +11,22 @@ import {
 import { anyCoveragePolicy } from "./policy/any-coverage-policy";
 import { anyDeltaCoveragePolicy } from "./policy/any-delta-coverage-policy";
 
-const averageCoveragePolicy = object({
-  type: literal("average-coverage-policy"),
-  warn: number().min(0).max(100),
-  fail: number().min(0).max(100),
-})
-  .required()
-  .strict();
-
-const averageDeltaCoveragePolicy = object({
-  type: literal("average-delta-coverage-policy"),
-  warn: number().min(-100).max(100),
-  fail: number().min(-100).max(100),
-})
-  .required()
-  .strict();
+// TODO: future implementations
+// const averageCoveragePolicy = object({
+//   type: literal("average-coverage-policy"),
+//   warn: number().min(0).max(100),
+//   fail: number().min(0).max(100),
+// })
+//   .required()
+//   .strict();
+//
+// const averageDeltaCoveragePolicy = object({
+//   type: literal("average-delta-coverage-policy"),
+//   warn: number().min(-100).max(100),
+//   fail: number().min(-100).max(100),
+// })
+//   .required()
+//   .strict();
 
 const coverageMetric = union([
   literal("line"),
@@ -93,8 +94,6 @@ const minPercentageTestPolicy = object({
 const policyTypes = discriminatedUnion("type", [
   anyCoveragePolicy,
   anyDeltaCoveragePolicy,
-  averageCoveragePolicy,
-  averageDeltaCoveragePolicy,
   deltaCoveragePolicy,
   minCoveragePolicy,
   maxLiteralTestPolicy,
