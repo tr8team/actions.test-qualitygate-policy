@@ -12,6 +12,7 @@ import { anyDeltaCoveragePolicy } from "./policy/any-delta-coverage-policy";
 import { deltaCoveragePolicy } from "./policy/delta-coverage-policy";
 import { testMetric } from "./enums";
 import { minCoveragePolicy } from "./policy/min-coverage-policy";
+import { maxLiteralTestPolicy } from "./policy/max-literal-test-policy";
 
 // TODO: future implementations
 // const averageCoveragePolicy = object({
@@ -29,15 +30,6 @@ import { minCoveragePolicy } from "./policy/min-coverage-policy";
 // })
 //   .required()
 //   .strict();
-
-const maxLiteralTestPolicy = object({
-  type: literal("max-literal-test-policy"),
-  metric: testMetric,
-  warn: number().min(0),
-  fail: number().min(0),
-})
-  .required()
-  .strict();
 
 const minLiteralTestPolicy = object({
   type: literal("min-literal-test-policy"),
