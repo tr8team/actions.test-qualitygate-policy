@@ -1,18 +1,24 @@
-import { describe, expect, it, should } from "vitest";
+import { describe, expect, it, should, chai } from "vitest";
 import { HistoryEntry } from "../../src/lib/history";
 import { IntermediateEntry, OutputEntry } from "../../src/lib/output";
 import { anything, instance, mock, verify, when } from "ts-mockito";
 import { ElementMapper } from "../../src/lib/interface/mapper";
 import { Policy } from "../../src/lib/interface/policy";
 import { BasicPolicyEngine } from "../../src/lib/basic-policy-engine";
-
+import { Some } from "../../src/lib/core/option";
+// @ts-ignore
+import helper from "../helper";
+import chaiAsPromised from "chai-as-promised";
 should();
+chai.use(chaiAsPromised);
+chai.use(helper)
+
 
 describe("Basic Policy Engine", () => {
 
   describe("evaluate", () => {
 
-    it("should return an output entry", () => {
+    it("should return an output entry", async () => {
 
       // dummy base History Entry
       const base: HistoryEntry = {
@@ -106,7 +112,6 @@ describe("Basic Policy Engine", () => {
                 }
               },
               name: "hello3"
-
             }
           ],
         }
@@ -259,31 +264,29 @@ describe("Basic Policy Engine", () => {
       const policy2Mock = mock<Policy>();
 
       const spyState: Partial<{
-        mapperToInt: HistoryEntry
-        policy1Arg1: IntermediateEntry,
-        policy1Arg2: HistoryEntry,
-        policy2Arg1: IntermediateEntry,
-        policy2Arg2: HistoryEntry,
+        mapperToIntArg1: HistoryEntry,
+        mapperToIntArg2: HistoryEntry,
+        policy1: IntermediateEntry,
+        policy2: IntermediateEntry,
         mapperToOutput: IntermediateEntry,
       }> = {}
 
-      when(mapperMock.inputToIntermediate(anything()))
-        .thenCall((a) => {
-          spyState.mapperToInt = a;
+      when(mapperMock.inputToIntermediate(anything(), anything()))
+        .thenCall((a,b) => {
+          spyState.mapperToIntArg1 = a;
+          spyState.mapperToIntArg2 = b;
           return start;
         });
 
-      when(policy1Mock.evaluate(anything(), anything()))
-        .thenCall((a, b) => {
-          spyState.policy1Arg1 = a;
-          spyState.policy1Arg2 = b;
-          return int1;
+      when(policy1Mock.evaluate(anything()))
+        .thenCall((a) => {
+          spyState.policy1 = a;
+          return Promise.resolve(int1);
         });
-      when(policy2Mock.evaluate(anything(), anything()))
-        .thenCall((a, b) => {
-          spyState.policy2Arg1 = a;
-          spyState.policy2Arg2 = b;
-          return int2;
+      when(policy2Mock.evaluate(anything()))
+        .thenCall((a) => {
+          spyState.policy2 = a;
+          return Promise.resolve(int2);
         });
       when(mapperMock.intermediateToOutput(anything()))
         .thenCall((a) => {
@@ -298,27 +301,27 @@ describe("Basic Policy Engine", () => {
       const engine = new BasicPolicyEngine([policy1, policy2], mapper);
 
       // act
-      const result = engine.evaluate(current,base);
+      const result = await engine.evaluate(current,Some(base));
+
+      verify(mapperMock.inputToIntermediate(anything(), anything())).once();
+      verify(policy1Mock.evaluate(anything())).once();
+      verify(policy2Mock.evaluate(anything())).once();
+      verify(mapperMock.intermediateToOutput(anything())).once();
 
       result.should.deep.equal(expected.output);
       expect(spyState.mapperToOutput).to.not.be.undefined;
-      expect(spyState.mapperToInt).to.not.be.undefined;
-      expect(spyState.policy1Arg1).to.not.be.undefined;
-      expect(spyState.policy1Arg2).to.not.be.undefined;
-      expect(spyState.policy2Arg1).to.not.be.undefined;
-      expect(spyState.policy2Arg2).to.not.be.undefined;
+      expect(spyState.mapperToIntArg1).to.not.be.undefined;
+      expect(spyState.mapperToIntArg2).to.not.be.undefined;
+      expect(spyState.policy1).to.not.be.undefined;
+      expect(spyState.policy2).to.not.be.undefined;
 
-      spyState.mapperToInt?.should.deep.equal(expected.input);
-      spyState.policy1Arg1?.should.deep.equal(expected.start);
-      spyState.policy1Arg2?.should.deep.equal(expected.base);
-      spyState.policy2Arg1?.should.deep.equal(expected.int1);
-      spyState.policy2Arg2?.should.deep.equal(expected.base);
+      spyState.mapperToIntArg1?.should.deep.equal(expected.input);
+      await spyState.mapperToIntArg2?.should.be.congruent(Some(expected.base));
+      spyState.policy1?.should.deep.equal(expected.start);
+      spyState.policy2?.should.deep.equal(expected.int1);
       spyState.mapperToOutput?.should.deep.equal(expected.int2);
 
-      verify(mapperMock.inputToIntermediate(anything())).once();
-      verify(policy1Mock.evaluate(anything(), anything())).once();
-      verify(policy2Mock.evaluate(anything(), anything())).once();
-      verify(mapperMock.intermediateToOutput(anything())).once();
+
 
     });
 

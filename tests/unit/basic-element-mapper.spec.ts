@@ -1,7 +1,12 @@
-import { describe, it, should } from "vitest";
+import { describe, it, should, chai } from "vitest";
 import { BasicElementMapper } from "../../src/lib/basic-element-mapper";
 import { HistoryEntry, Input } from "../../src/lib/history";
 import { IntermediateElement, IntermediateEntry, OutputElement, OutputEntry } from "../../src/lib/output";
+import { None, Some } from "../../src/lib/core/option";
+// @ts-ignore
+import helper from "../helper.js";
+
+chai.use(helper);
 
 should();
 
@@ -27,12 +32,70 @@ describe("BasicElementMapper", function() {
         name: "test",
         url: "https://example.com",
         data: {
-          type: "documentation"
+          type: "documentation",
+          resultDetails: {
+            fail: [],
+            pass: [],
+            warn: [],
+          }
         }
       };
 
       // act
-      const act = mapper.toIntermediateMetadata(input);
+      const act = mapper.toIntermediateMetadata(input, None());
+
+      // assert
+      act.should.deep.equal(expected);
+    });
+
+    it("should convert a documentation input to intermediate, ignoring base", function() {
+
+      // dummy Input data
+      const input: Input = {
+        name: "test",
+        url: "https://example.com",
+        data: {
+          type: "documentation",
+        }
+      };
+
+      const base: Input[] = [
+        {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "documentation",
+          }
+        }, {
+          name: "test2",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 20,
+            statement: 20,
+            function: 20,
+            branch: 40
+          }
+        }
+
+      ];
+
+      // expected Intermediate data
+      const expected: IntermediateElement = {
+        name: "test",
+        url: "https://example.com",
+        data: {
+          type: "documentation",
+          resultDetails: {
+            fail: [],
+            pass: [],
+            warn: [],
+          }
+        }
+      };
+
+      // act
+      const act = mapper.toIntermediateMetadata(input, Some(base));
 
       // assert
       act.should.deep.equal(expected);
@@ -56,56 +119,252 @@ describe("BasicElementMapper", function() {
         url: "https://example.com",
         data: {
           type: "code-quality",
-          qualityRating: "A"
+          qualityRating: "A",
+          resultDetails: {
+            fail: [],
+            pass: [],
+            warn: [],
+          }
         }
       };
 
       // act
-      const act = mapper.toIntermediateMetadata(input);
+      const act = mapper.toIntermediateMetadata(input, None());
 
       // assert
       act.should.deep.equal(expected);
 
     });
 
-    it("should convert a test-coverage input to intermediate", function() {
+
+    it("should convert a code-quality input to intermediate, ignoring base", function() {
 
       // dummy Input data
       const input: Input = {
         name: "test",
         url: "https://example.com",
         data: {
-          type: "test-coverage",
-          line: 100,
-          statement: 100,
-          function: 100,
-          branch: 100
+          type: "code-quality",
+          qualityRating: "A"
         }
       };
+      const base: Input[] = [
+        {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "documentation"
+          }
+        }, {
+          name: "test2",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 20,
+            statement: 20,
+            function: 20,
+            branch: 40
+          }
+        }
+
+      ];
 
       // expected Intermediate data
       const expected: IntermediateElement = {
         name: "test",
         url: "https://example.com",
         data: {
-          type: "test-coverage",
-          line: 100,
-          statement: 100,
-          function: 100,
-          branch: 100,
+          type: "code-quality",
+          qualityRating: "A",
           resultDetails: {
             fail: [],
             pass: [],
-            warn: []
+            warn: [],
           }
         }
       };
 
       // act
-      const act = mapper.toIntermediateMetadata(input);
+      const act = mapper.toIntermediateMetadata(input, Some(base));
 
       // assert
       act.should.deep.equal(expected);
+
+    });
+
+    describe("test-coverage", function() {
+      it("should convert a test-coverage input to intermediate without modification if base is None", function() {
+
+        // dummy Input data
+        const input: Input = {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 100,
+            statement: 100,
+            function: 100,
+            branch: 100
+          }
+        };
+
+        // expected Intermediate data
+        const expected: IntermediateElement = {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 100,
+            statement: 100,
+            function: 100,
+            branch: 100,
+            delta: None(),
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: []
+            }
+          }
+        };
+
+        // act
+        const act = mapper.toIntermediateMetadata(input, None());
+
+        // assert
+        return act.should.be.congruent(expected);
+
+      });
+
+      it("should convert a test-coverage input to intermediate with delta calculated if base is Some and matches", function() {
+
+        // dummy Input data
+        const input: Input = {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 100,
+            statement: 100,
+            function: 100,
+            branch: 100
+          }
+        };
+
+        const base: Input[] = [
+          {
+            name: "test",
+            url: "https://example.com",
+            data: {
+              type: "test-coverage",
+              line: 50,
+              statement: 60,
+              function: 20,
+              branch: 1
+            }
+          },
+          {
+            name: "docs",
+            url: "https://example.com",
+            data: {
+              type: "documentation",
+            }
+          }
+        ]
+
+        // expected Intermediate data
+        const expected: IntermediateElement = {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 100,
+            statement: 100,
+            function: 100,
+            branch: 100,
+            delta: Some({
+              line: 50,
+              statement: 40,
+              function: 80,
+              branch: 99,
+            }),
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: []
+            }
+          }
+        };
+
+        // act
+        const act = mapper.toIntermediateMetadata(input, Some(base));
+
+        // assert
+        return act.should.be.congruent(expected);
+
+      });
+
+      it("should convert a test-coverage input to intermediate without modification if base is Some and no matches", function() {
+
+        // dummy Input data
+        const input: Input = {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 100,
+            statement: 100,
+            function: 100,
+            branch: 100
+          }
+        };
+
+        const base: Input[] = [
+          {
+            name: "test-2",
+            url: "https://example.com",
+            data: {
+              type: "test-coverage",
+              line: 50,
+              statement: 60,
+              function: 20,
+              branch: 1
+            }
+          },
+          {
+            name: "docs",
+            url: "https://example.com",
+            data: {
+              type: "documentation",
+            }
+          }
+        ]
+
+        // expected Intermediate data
+        const expected: IntermediateElement = {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 100,
+            statement: 100,
+            function: 100,
+            branch: 100,
+            delta: None(),
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: []
+            }
+          }
+        };
+
+        // act
+        const act = mapper.toIntermediateMetadata(input, Some(base));
+
+        // assert
+        return act.should.be.congruent(expected);
+
+      });
 
     });
 
@@ -141,7 +400,65 @@ describe("BasicElementMapper", function() {
       };
 
       // act
-      const act = mapper.toIntermediateMetadata(input);
+      const act = mapper.toIntermediateMetadata(input, None());
+
+      // assert
+      act.should.deep.equal(expected);
+
+    });
+    it("should convert a test-result input to intermediate, ignoring base", function() {
+
+      // dummy Input data
+      const input: Input = {
+        name: "test",
+        url: "https://example.com",
+        data: {
+          type: "test-result",
+          fail: 20,
+          pass: 129,
+          skip: 17
+        }
+      };
+      const base: Input[] = [
+        {
+          name: "test",
+          url: "https://example.com",
+          data: {
+            type: "documentation"
+          }
+        }, {
+          name: "test2",
+          url: "https://example.com",
+          data: {
+            type: "test-coverage",
+            line: 20,
+            statement: 20,
+            function: 20,
+            branch: 40
+          }
+        }
+
+      ];
+
+      // expected Intermediate data
+      const expected: IntermediateElement = {
+        name: "test",
+        url: "https://example.com",
+        data: {
+          type: "test-result",
+          fail: 20,
+          pass: 129,
+          skip: 17,
+          resultDetails: {
+            fail: [],
+            pass: [],
+            warn: []
+          }
+        }
+      };
+
+      // act
+      const act = mapper.toIntermediateMetadata(input, Some(base));
 
       // assert
       act.should.deep.equal(expected);
@@ -165,10 +482,10 @@ describe("BasicElementMapper", function() {
         };
 
         // act
-        const act = () => mapper.toIntermediateMetadata(input);
+        const act = () => mapper.toIntermediateMetadata(input, None());
 
         // assert
-        act.should.throw(Error,"unreachable");
+        act.should.throw(Error, "unreachable");
 
       });
 
@@ -178,139 +495,646 @@ describe("BasicElementMapper", function() {
 
   describe("inputToIntermediate", function() {
 
-    it("should convert a history entry to intermediate", function() {
+    describe("with base", function() {
 
-      // dummy HistoryEntry data
-      const input: HistoryEntry = {
-        sha: "1234567890",
-        url: "https://example.com",
-        action: "test",
-        items: [
-          {
-            name: "test",
-            url: "https://example.com",
-            data: {
-              type: "test-result",
-              fail: 20,
-              pass: 129,
-              skip: 17
-            }
-          }
-        ]
-      };
+      describe("base has match", function() {
 
-      // expected Intermediate data
-      const expected: IntermediateEntry = {
-        sha: "1234567890",
-        url: "https://example.com",
-        action: "test",
-        items: [
+        const theory: { subject: { current: HistoryEntry, base: HistoryEntry }, expected: IntermediateEntry }[] = [
           {
-            name: "test",
-            url: "https://example.com",
-            data: {
-              type: "test-result",
-              fail: 20,
-              pass: 129,
-              skip: 17,
-              resultDetails: {
-                fail: [],
-                pass: [],
-                warn: []
+            subject: {
+              current: {
+                sha: "1234567890",
+                url: "https://example.com",
+                action: "test",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 100,
+                      statement: 100,
+                      function: 100,
+                      branch: 100
+                    }
+                  }
+                ]
+              },
+              base: {
+                sha: "123455550",
+                url: "https://example5.com",
+                action: "test5",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 80,
+                      statement: 80,
+                      function: 80,
+                      branch: 80
+                    }
+                  }
+                ]
               }
-            }
-          }
-        ]
-      };
-
-      // act
-      const act = mapper.inputToIntermediate(input);
-
-      // assert
-      act.should.deep.equal(expected);
-
-    });
-
-    it("should convert a history entry with multiple items to intermediate", function() {
-
-      // dummy HistoryEntry data
-      const input: HistoryEntry = {
-        sha: "1234567890",
-        url: "https://example.com",
-        action: "test",
-        items: [
-          {
-            name: "test",
-            url: "https://example.com",
-            data: {
-              type: "test-result",
-              fail: 20,
-              pass: 129,
-              skip: 17
+            },
+            expected: {
+              sha: "1234567890",
+              url: "https://example.com",
+              action: "test",
+              items: [
+                {
+                  name: "test",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-result",
+                    fail: 20,
+                    pass: 129,
+                    skip: 17,
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                },
+                {
+                  name: "test2",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-coverage",
+                    line: 100,
+                    statement: 100,
+                    function: 100,
+                    branch: 100,
+                    delta: Some({
+                      line: 20,
+                      statement: 20,
+                      function: 20,
+                      branch: 20
+                    }),
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                }
+              ]
             }
           },
           {
-            name: "test2",
-            url: "https://example.com",
-            data: {
-              type: "test-coverage",
-              line: 100,
-              statement: 100,
-              function: 100,
-              branch: 100
-            }
-          }
-        ]
-      };
-
-      // expected Intermediate data
-      const expected = {
-        sha: "1234567890",
-        url: "https://example.com",
-        action: "test",
-        items: [
-          {
-            name: "test",
-            url: "https://example.com",
-            data: {
-              type: "test-result",
-              fail: 20,
-              pass: 129,
-              skip: 17,
-              resultDetails: {
-                fail: [],
-                pass: [],
-                warn: []
+            subject: {
+              current: {
+                sha: "1234567890",
+                url: "https://example.com",
+                action: "test",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 80,
+                      statement: 75,
+                      function: 77,
+                      branch: 92
+                    }
+                  }
+                ]
+              },
+              base: {
+                sha: "123455550",
+                url: "https://example5.com",
+                action: "test5",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 80,
+                      statement: 80,
+                      function: 80,
+                      branch: 80
+                    }
+                  }
+                ]
               }
+            },
+            expected: {
+              sha: "1234567890",
+              url: "https://example.com",
+              action: "test",
+              items: [
+                {
+                  name: "test",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-result",
+                    fail: 20,
+                    pass: 129,
+                    skip: 17,
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                },
+                {
+                  name: "test2",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-coverage",
+                    line: 80,
+                    statement: 75,
+                    function: 77,
+                    branch: 92,
+                    delta: Some({
+                      line: 0,
+                      statement: -5,
+                      function: -3,
+                      branch: 12
+                    }),
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                }
+              ]
             }
           },
           {
-            name: "test2",
-            url: "https://example.com",
-            data: {
-              type: "test-coverage",
-              line: 100,
-              statement: 100,
-              function: 100,
-              branch: 100,
-              resultDetails: {
-                fail: [],
-                pass: [],
-                warn: []
+            subject: {
+              current: {
+                sha: "1234567890",
+                url: "https://example.com",
+                action: "test",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 0,
+                      statement: 100,
+                      function: 50,
+                      branch: 62
+                    }
+                  }
+                ]
+              },
+              base: {
+                sha: "123455550",
+                url: "https://example5.com",
+                action: "test5",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 100,
+                      statement: 0,
+                      function: 75,
+                      branch: 62
+                    }
+                  }
+                ]
               }
+            },
+            expected: {
+              sha: "1234567890",
+              url: "https://example.com",
+              action: "test",
+              items: [
+                {
+                  name: "test",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-result",
+                    fail: 20,
+                    pass: 129,
+                    skip: 17,
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                },
+                {
+                  name: "test2",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-coverage",
+                    line: 0,
+                    statement: 100,
+                    function: 50,
+                    branch: 62,
+                    delta: Some({
+                      line: -100,
+                      statement: 100,
+                      function: -25,
+                      branch: 0
+                    }),
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                }
+              ]
             }
           }
-        ]
-      };
+
+        ];
+
+        theory.forEach(({ subject: { current, base }, expected }) => {
+          it("should convert a history entry with to intermediate", async function() {
+
+            // act
+            const act = mapper.inputToIntermediate(current, Some(base));
+
+            // assert
+            await act.should.be.congruent(expected);
+
+          });
+
+        });
+      });
+
+      describe("base has no match", function() {
+
+        const theory: { subject: { current: HistoryEntry, base: HistoryEntry }, expected: IntermediateEntry }[] = [
+          {
+            subject: {
+              current: {
+                sha: "1234567890",
+                url: "https://example.com",
+                action: "test",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 80,
+                      statement: 75,
+                      function: 77,
+                      branch: 92
+                    }
+                  }
+                ]
+              },
+              base: {
+                sha: "123455550",
+                url: "https://example5.com",
+                action: "test5",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test3",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 80,
+                      statement: 80,
+                      function: 80,
+                      branch: 80
+                    }
+                  }
+                ]
+              }
+            },
+            expected: {
+              sha: "1234567890",
+              url: "https://example.com",
+              action: "test",
+              items: [
+                {
+                  name: "test",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-result",
+                    fail: 20,
+                    pass: 129,
+                    skip: 17,
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                },
+                {
+                  name: "test2",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-coverage",
+                    line: 80,
+                    statement: 75,
+                    function: 77,
+                    branch: 92,
+                    delta: None(),
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            subject: {
+              current: {
+                sha: "1234567890",
+                url: "https://example.com",
+                action: "test",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-coverage",
+                      line: 80,
+                      statement: 75,
+                      function: 77,
+                      branch: 92
+                    }
+                  }
+                ]
+              },
+              base: {
+                sha: "123455550",
+                url: "https://example5.com",
+                action: "test5",
+                items: [
+                  {
+                    name: "test",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  },
+                  {
+                    name: "test2",
+                    url: "https://example.com",
+                    data: {
+                      type: "test-result",
+                      fail: 20,
+                      pass: 129,
+                      skip: 17
+                    }
+                  }
+                ]
+              }
+            },
+            expected: {
+              sha: "1234567890",
+              url: "https://example.com",
+              action: "test",
+              items: [
+                {
+                  name: "test",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-result",
+                    fail: 20,
+                    pass: 129,
+                    skip: 17,
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                },
+                {
+                  name: "test2",
+                  url: "https://example.com",
+                  data: {
+                    type: "test-coverage",
+                    line: 80,
+                    statement: 75,
+                    function: 77,
+                    branch: 92,
+                    delta: None(),
+                    resultDetails: {
+                      fail: [],
+                      pass: [],
+                      warn: []
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ];
+
+        theory.forEach(({ subject: { current, base }, expected }) => {
+
+          it("should convert a history entry with to intermediate", async function() {
+
+            // act
+            const act = mapper.inputToIntermediate(current, Some(base));
+
+            // assert
+            await act.should.be.congruent(expected);
+
+          });
 
 
-      // act
-      const act = mapper.inputToIntermediate(input);
+        });
 
-      // assert
-      act.should.deep.equal(expected);
+      });
 
     });
+
+    describe("with no base", function() {
+
+      it("should convert a history entry to intermediate", async function() {
+
+        // dummy Input data
+        const input: HistoryEntry = {
+          sha: "1234567890",
+          url: "https://example.com",
+          action: "test",
+          items: [
+            {
+              name: "test",
+              url: "https://example.com",
+              data: {
+                type: "test-result",
+                fail: 20,
+                pass: 129,
+                skip: 17
+              }
+            },
+            {
+              name: "test2",
+              url: "https://example.com",
+              data: {
+                type: "test-coverage",
+                line: 80,
+                statement: 75,
+                function: 77,
+                branch: 92
+              }
+            }
+          ]
+        };
+
+        // expected Intermediate data
+        const expected: IntermediateEntry = {
+          sha: "1234567890",
+          url: "https://example.com",
+          action: "test",
+          items: [
+            {
+              name: "test",
+              url: "https://example.com",
+              data: {
+                type: "test-result",
+                fail: 20,
+                pass: 129,
+                skip: 17,
+                resultDetails: {
+                  fail: [],
+                  pass: [],
+                  warn: []
+                }
+              }
+            },
+            {
+              name: "test2",
+              url: "https://example.com",
+              data: {
+                type: "test-coverage",
+                line: 80,
+                statement: 75,
+                function: 77,
+                branch: 92,
+                delta: None(),
+                resultDetails: {
+                  fail: [],
+                  pass: [],
+                  warn: []
+                }
+              }
+            }
+          ]
+        };
+
+        // act
+        const act = mapper.inputToIntermediate(input, None());
+
+        // assert
+        await act.should.be.congruent(expected);
+
+      });
+
+    });
+
 
   });
 
@@ -525,8 +1349,7 @@ describe("BasicElementMapper", function() {
               pass: 129,
               skip: 17,
               resultDetails: {
-                fail: [
-                ],
+                fail: [],
                 pass: [
                   "min-test-result"
                 ],
@@ -545,8 +1368,7 @@ describe("BasicElementMapper", function() {
               pass: 129,
               skip: 17,
               resultDetails: {
-                fail: [
-                ],
+                fail: [],
                 pass: [
                   "min-test-result"
                 ],
@@ -564,7 +1386,7 @@ describe("BasicElementMapper", function() {
 
         });
 
-      })
+      });
 
       describe("warn", function() {
         it("should convert IntermediateElement to OutputMetadata", function() {
@@ -579,14 +1401,13 @@ describe("BasicElementMapper", function() {
               pass: 129,
               skip: 17,
               resultDetails: {
-                fail: [
-                ],
+                fail: [],
                 pass: [
                   "min-test-result",
-                  "max-literal-test-result",
+                  "max-literal-test-result"
                 ],
                 warn: [
-                  "max-literal-test-result",
+                  "max-literal-test-result"
                 ]
               }
             }
@@ -602,14 +1423,13 @@ describe("BasicElementMapper", function() {
               pass: 129,
               skip: 17,
               resultDetails: {
-                fail: [
-                ],
+                fail: [],
                 pass: [
                   "min-test-result",
-                  "max-literal-test-result",
+                  "max-literal-test-result"
                 ],
                 warn: [
-                  "max-literal-test-result",
+                  "max-literal-test-result"
                 ]
               },
               result: "warn"
@@ -624,7 +1444,7 @@ describe("BasicElementMapper", function() {
 
         });
 
-      })
+      });
 
       describe("fail", function() {
         it("should convert IntermediateElement to OutputMetadata", function() {
@@ -684,14 +1504,14 @@ describe("BasicElementMapper", function() {
 
         });
 
-      })
+      });
 
     });
 
     describe("test-coverage", function() {
 
       describe("pass", function() {
-        it("should convert IntermediateElement to OutputMetadata", function() {
+        it("should convert IntermediateElement to OutputMetadata", async function() {
 
           // dummy IntermediateElement data
           const input: IntermediateElement = {
@@ -703,15 +1523,14 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
+              delta: None(),
               resultDetails: {
-                fail: [
-                ],
+                fail: [],
                 pass: [
                   "min-test-result",
                   "average-delta-coverage"
                 ],
-                warn: [
-                ]
+                warn: []
               }
             }
           };
@@ -726,15 +1545,14 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
+              delta: None(),
               resultDetails: {
-                fail: [
-                ],
+                fail: [],
                 pass: [
                   "min-test-result",
                   "average-delta-coverage"
                 ],
-                warn: [
-                ]
+                warn: []
               },
               result: "pass"
             }
@@ -744,14 +1562,14 @@ describe("BasicElementMapper", function() {
           const act = mapper.toOutputMetadata(input);
 
           // assert
-          act.should.deep.equal(expected);
+          await act.should.be.congruent(expected);
 
         });
 
-      })
+      });
 
       describe("fail", function() {
-        it("should convert IntermediateElement to OutputMetadata", function() {
+        it("should convert IntermediateElement to OutputMetadata", async function() {
 
           // dummy IntermediateElement data
           const input: IntermediateElement = {
@@ -763,6 +1581,12 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
+              delta: Some({
+                line: -20,
+                statement: 24,
+                branch: 40,
+                function: 80
+              }),
               resultDetails: {
                 fail: [
                   "min-test-result"
@@ -788,6 +1612,12 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
+              delta: Some({
+                line: -20,
+                statement: 24,
+                branch: 40,
+                function: 80
+              }),
               resultDetails: {
                 fail: [
                   "min-test-result"
@@ -808,14 +1638,14 @@ describe("BasicElementMapper", function() {
           const act = mapper.toOutputMetadata(input);
 
           // assert
-          act.should.deep.equal(expected);
+          await act.should.be.congruent(expected);
 
         });
 
-      })
+      });
 
       describe("warn", function() {
-        it("should convert IntermediateElement to OutputMetadata", function() {
+        it("should convert IntermediateElement to OutputMetadata", async function() {
 
           // dummy IntermediateElement data
           const input: IntermediateElement = {
@@ -827,11 +1657,10 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
+              delta: None(),
               resultDetails: {
-                fail: [
-                ],
-                pass: [
-                ],
+                fail: [],
+                pass: [],
                 warn: [
                   "min-test-result"
                 ]
@@ -849,11 +1678,10 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
+              delta: None(),
               resultDetails: {
-                fail: [
-                ],
-                pass: [
-                ],
+                fail: [],
+                pass: [],
                 warn: [
                   "min-test-result"
                 ]
@@ -866,11 +1694,11 @@ describe("BasicElementMapper", function() {
           const act = mapper.toOutputMetadata(input);
 
           // assert
-          act.should.deep.equal(expected);
+          await act.should.be.congruent(expected);
 
         });
 
-      })
+      });
 
     });
 
@@ -883,7 +1711,12 @@ describe("BasicElementMapper", function() {
           name: "test",
           url: "https://example.com",
           data: {
-            type: "documentation"
+            type: "documentation",
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: [],
+            }
           }
         };
 
@@ -892,7 +1725,13 @@ describe("BasicElementMapper", function() {
           name: "test",
           url: "https://example.com",
           data: {
-            type: "documentation"
+            type: "documentation",
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: [],
+            },
+            result: "pass",
           }
         };
 
@@ -917,7 +1756,12 @@ describe("BasicElementMapper", function() {
           url: "https://example.com",
           data: {
             type: "code-quality",
-            qualityRating: "B+"
+            qualityRating: "B+",
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: [],
+            }
           }
         };
 
@@ -927,7 +1771,14 @@ describe("BasicElementMapper", function() {
           url: "https://example.com",
           data: {
             type: "code-quality",
-            qualityRating: "B+"
+            qualityRating: "B+",
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: [],
+            },
+            result: "pass",
+
           }
         };
 
@@ -940,29 +1791,6 @@ describe("BasicElementMapper", function() {
       });
 
     });
-
-    describe("unreachable case", function(){
-
-      it("should throw an error", function(){
-
-        // dummy IntermediateElement data
-        const input: IntermediateElement = {
-          name: "test",
-          url: "https://example.com",
-          data: {
-            type: "unknown" as any
-          }
-        };
-
-        // act
-        const act = () => mapper.toOutputMetadata(input);
-
-        // assert
-        act.should.throw(Error, "unreachable");
-
-      });
-
-    })
 
   });
 

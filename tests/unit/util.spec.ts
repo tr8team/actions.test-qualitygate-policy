@@ -1,9 +1,10 @@
 import { chai, should, it, describe } from "vitest";
 import { object, string } from "zod";
-import { parseJSON, toResult } from "../../src/lib/util.js";
+import { parseJSON, toOption, toResult } from "../../src/lib/util.js";
 import { Ok } from "../../src/lib/core/result.js";
 // @ts-ignore
 import helper from "../helper.js";
+import { None, Some } from "../../src/lib/core/option";
 
 should();
 
@@ -49,6 +50,50 @@ describe("parseJSON", function() {
 
     const act = parseJSON(subject);
     return act.should.be.errErrorMessage(expected);
+  });
+
+});
+
+
+describe("toOption", function() {
+
+  it("should convert an undefined value to None", async function() {
+
+    // arrange
+    const subject: string | undefined = undefined;
+    const expected = None();
+
+    // act
+    const act = toOption(subject);
+
+    // assert
+    await act.should.be.congruent(expected);
+  });
+
+  it("should convert a null value to None", async function() {
+
+    // arrange
+    const subject = null;
+    const expected = None();
+
+    // act
+    const act = toOption(subject);
+
+    // assert
+    await act.should.be.congruent(expected);
+  });
+
+  it("should convert a valid value to Some", async function() {
+
+    // arrange
+    const subject = "hello!";
+    const expected = Some("hello!");
+
+    // act
+    const act = toOption(subject);
+
+    // assert
+    await act.should.be.congruent(expected);
   });
 
 });

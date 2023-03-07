@@ -9,30 +9,7 @@ import {
   z,
 } from "zod";
 import { anyCoveragePolicy } from "./policy/any-coverage-policy";
-
-const anyDeltaCoveragePolicy = object({
-  type: literal("any-delta-coverage-policy"),
-  warn: number().min(-100).max(100),
-  fail: number().min(-100).max(100),
-})
-  .required()
-  .strict();
-
-const allCoveragePolicy = object({
-  type: literal("all-coverage-policy"),
-  warn: number().min(0).max(100),
-  fail: number().min(0).max(100),
-})
-  .required()
-  .strict();
-
-const allDeltaCoveragePolicy = object({
-  type: literal("all-delta-coverage-policy"),
-  warn: number().min(-100).max(100),
-  fail: number().min(-100).max(100),
-})
-  .required()
-  .strict();
+import { anyDeltaCoveragePolicy } from "./policy/any-delta-coverage-policy";
 
 const averageCoveragePolicy = object({
   type: literal("average-coverage-policy"),
@@ -116,8 +93,6 @@ const minPercentageTestPolicy = object({
 const policyTypes = discriminatedUnion("type", [
   anyCoveragePolicy,
   anyDeltaCoveragePolicy,
-  allCoveragePolicy,
-  allDeltaCoveragePolicy,
   averageCoveragePolicy,
   averageDeltaCoveragePolicy,
   deltaCoveragePolicy,

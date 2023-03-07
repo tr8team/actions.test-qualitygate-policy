@@ -1,5 +1,5 @@
 import { Policy } from "../interface/policy";
-import { IntermediateEntry } from "../output";
+import { IntermediateEntry, PolicyResult } from "../output";
 import { literal, number, object, z } from "zod";
 import { BasePolicy } from "./base-policy";
 
@@ -14,20 +14,18 @@ const anyCoveragePolicy = object({
 type AnyCoveragePolicyConfig = z.infer<typeof anyCoveragePolicy>;
 
 class AnyCoveragePolicy extends BasePolicy implements Policy {
-  readonly #name: string;
   readonly #config: AnyCoveragePolicyConfig;
 
   constructor(name: string, target: string, config: AnyCoveragePolicyConfig) {
-    super(target);
-    this.#name = name;
+    super(name, target);
     this.#config = config;
   }
 
-  evaluate(current: IntermediateEntry): IntermediateEntry {
+  evaluate(current: IntermediateEntry): Promise<IntermediateEntry> {
     return this.filteredEvaluate(current, (item) => {
       if (item.data.type === "test-coverage") {
-        const { url, name, data } = item;
-        let verdict = "pass";
+        const { data } = item;
+        let verdict: PolicyResult = "pass";
         if (
           data.function < this.#config.warn ||
           data.line < this.#config.warn ||
@@ -44,29 +42,9 @@ class AnyCoveragePolicy extends BasePolicy implements Policy {
         ) {
           verdict = "fail";
         }
-        const { resultDetails, ...ret } = data;
-        const rd = {
-          fail: [...resultDetails.fail],
-          warn: [...resultDetails.warn],
-          pass: [...resultDetails.pass],
-        };
-        if (verdict === "fail") {
-          rd.fail.push(this.#name);
-        } else if (verdict === "warn") {
-          rd.warn.push(this.#name);
-        } else {
-          rd.pass.push(this.#name);
-        }
-        return {
-          name,
-          url,
-          data: {
-            ...ret,
-            resultDetails: rd,
-          },
-        };
+        return Promise.resolve(this.updateElement(item, verdict));
       }
-      return item;
+      return Promise.resolve(item);
     });
   }
 }

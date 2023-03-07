@@ -3,16 +3,20 @@ import { HistoryEntry } from "./history";
 import { Policy } from "./interface/policy";
 import { OutputEntry } from "./output";
 import { ElementMapper } from "./interface/mapper";
+import { Option } from "./core/option";
 
 class BasicPolicyEngine implements PolicyEngine {
   readonly #policies: Policy[];
   readonly #mapper: ElementMapper;
 
-  evaluate(current: HistoryEntry, base?: HistoryEntry): OutputEntry {
-    const start = this.#mapper.inputToIntermediate(current);
-    const intermediate = this.#policies.reduce(
-      (prev, x) => x.evaluate(prev, base),
-      start
+  async evaluate(
+    current: HistoryEntry,
+    base: Option<HistoryEntry>
+  ): Promise<OutputEntry> {
+    const start = this.#mapper.inputToIntermediate(current, base);
+    const intermediate = await this.#policies.reduce(
+      async (prev, x) => await x.evaluate(await prev),
+      Promise.resolve(start)
     );
     return this.#mapper.intermediateToOutput(intermediate);
   }

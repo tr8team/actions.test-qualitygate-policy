@@ -1,29 +1,58 @@
 import { ElementMapper } from "./interface/mapper";
-import { HistoryEntry, Input } from "./history";
+import { HistoryEntry, Input, TestCoverageMetadata } from "./history";
 import {
   IntermediateElement,
   IntermediateEntry,
   IntermediateMetadata,
   OutputElement,
   OutputEntry,
-  OutputMetadata,
 } from "./output";
+import { Option } from "./core/option";
+import { toOption } from "./util";
 
 class BasicElementMapper implements ElementMapper {
-  toIntermediateMetadata({ url, name, data }: Input): IntermediateElement {
+  toIntermediateMetadata(
+    { url, name, data }: Input,
+    base: Option<Input[]>
+  ): IntermediateElement {
     const d = ((): IntermediateMetadata => {
       switch (data.type) {
         case "documentation":
           return {
             ...data,
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: [],
+            },
           };
         case "code-quality":
           return {
             ...data,
+            resultDetails: {
+              fail: [],
+              pass: [],
+              warn: [],
+            },
           };
         case "test-coverage":
           return {
             ...data,
+            delta: base
+              .andThen(
+                (x) =>
+                  toOption(
+                    x.find(
+                      (b) => b.name === name && b.data.type === "test-coverage"
+                    )?.data
+                  ) as Option<TestCoverageMetadata>
+              )
+              .map((x) => ({
+                branch: data.branch - x.branch,
+                line: data.line - x.line,
+                function: data.function - x.function,
+                statement: data.statement - x.statement,
+              })),
             resultDetails: {
               fail: [],
               pass: [],
@@ -51,60 +80,36 @@ class BasicElementMapper implements ElementMapper {
     };
   }
 
-  inputToIntermediate({
-    sha,
-    url,
-    items,
-    action,
-  }: HistoryEntry): IntermediateEntry {
+  inputToIntermediate(
+    { sha, url, items, action }: HistoryEntry,
+    base: Option<HistoryEntry>
+  ): IntermediateEntry {
     return {
       url,
       sha,
       action,
-      items: items.map((x) => this.toIntermediateMetadata(x)),
+      items: items.map((x) =>
+        this.toIntermediateMetadata(
+          x,
+          base.map((b) => b.items)
+        )
+      ),
     };
   }
 
   toOutputMetadata({ url, name, data }: IntermediateElement): OutputElement {
-    const d = ((): OutputMetadata => {
-      switch (data.type) {
-        case "documentation":
-          return {
-            ...data,
-          };
-        case "code-quality":
-          return {
-            ...data,
-          };
-        case "test-coverage":
-          return {
-            ...data,
-            result:
-              data.resultDetails.fail.length > 0
-                ? "fail"
-                : data.resultDetails.warn.length > 0
-                ? "warn"
-                : "pass",
-          };
-        case "test-result":
-          return {
-            ...data,
-            result:
-              data.resultDetails.fail.length > 0
-                ? "fail"
-                : data.resultDetails.warn.length > 0
-                ? "warn"
-                : "pass",
-          };
-        default:
-          throw new Error("unreachable");
-      }
-    })();
-
     return {
       url,
       name,
-      data: d,
+      data: {
+        ...data,
+        result:
+          data.resultDetails.fail.length > 0
+            ? "fail"
+            : data.resultDetails.warn.length > 0
+            ? "warn"
+            : "pass",
+      },
     };
   }
 
