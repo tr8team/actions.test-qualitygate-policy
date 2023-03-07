@@ -3,7 +3,7 @@ import { getInput, setOutput } from "@actions/core";
 import { parseJSON } from "../lib/util.js";
 import { Validator } from "../lib/interface/validator.js";
 import { Ok, Result } from "../lib/core/result.js";
-import { Option } from "../lib/core/option.js";
+import { None, Option, Some } from "../lib/core/option.js";
 
 class GithubActionIO implements ActionIO {
   get(key: string): string {
@@ -26,6 +26,16 @@ class GithubActionIO implements ActionIO {
 
   setObject(key: string, value: object): void {
     setOutput(key, JSON.stringify(value));
+  }
+
+  getOptionalObject<T>(
+    key: string,
+    validator: Option<Validator<T>>
+  ): Result<Option<T>, Error> {
+    const raw = this.get(key);
+    if (raw === "") return Ok(None());
+
+    return this.getObject(key, validator).map((o) => Some(o));
   }
 }
 

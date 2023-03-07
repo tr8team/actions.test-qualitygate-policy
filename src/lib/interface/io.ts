@@ -7,6 +7,11 @@ interface ActionIO {
 
   getObject<T>(key: string, validator: Option<Validator<T>>): Result<T, Error>;
 
+  getOptionalObject<T>(
+    key: string,
+    validator: Option<Validator<T>>
+  ): Result<Option<T>, Error>;
+
   set(key: string, value: string): void;
 
   setObject(key: string, value: object): void;
