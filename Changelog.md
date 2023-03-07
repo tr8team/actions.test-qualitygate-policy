@@ -1,3 +1,22 @@
+## 1.0.0 (2023-03-07)
+
+
+### Features
+
+* any coverage policy ([594c27d](https://github.com/tr8team/actions.test-qualitygate/commit/594c27d226a912c4d3a423f5231e830ae20329bc))
+* any coverage policy ([05ea3f0](https://github.com/tr8team/actions.test-qualitygate/commit/05ea3f0828eac5272a1ce13388d01ea5ee7c0169))
+* basic element mapper ([8a89125](https://github.com/tr8team/actions.test-qualitygate/commit/8a89125eb6297a0702b1c0f4907d27b3d249b2ae))
+* delta coverage policy ([5de8a2d](https://github.com/tr8team/actions.test-qualitygate/commit/5de8a2da22507bd83244bf1c7dbc7e1c235f1b55))
+* initial commit ([a6633cb](https://github.com/tr8team/actions.test-qualitygate/commit/a6633cb2205d99712372ec9e23d1e979f083376e))
+* input retriever ([1ba0923](https://github.com/tr8team/actions.test-qualitygate/commit/1ba0923e73ffd1a36c14b2cfaddd23483f477f55))
+* max literal test policy ([8d757a5](https://github.com/tr8team/actions.test-qualitygate/commit/8d757a5d68a64ec44feae53524f16f32360fab09))
+* min coverage policy ([d753025](https://github.com/tr8team/actions.test-qualitygate/commit/d75302570d0f78a8c164c3fc3af3570ebbb47440))
+* min literal test policy ([fa907f0](https://github.com/tr8team/actions.test-qualitygate/commit/fa907f04e63dd6068815bd946538533f12572c2b))
+* min percentage test policy ([32c173a](https://github.com/tr8team/actions.test-qualitygate/commit/32c173a92b2f530942fdcfb5019620d478ab6a6a))
+* min percentage test policy ([b074f84](https://github.com/tr8team/actions.test-qualitygate/commit/b074f8412d719e978f3b95dc5c42b3859e6f7392))
+* policies and histories ([1b49fd3](https://github.com/tr8team/actions.test-qualitygate/commit/1b49fd33d8343351831dd819fdbf4bed506ef8de))
+* policy factory ([7a028e9](https://github.com/tr8team/actions.test-qualitygate/commit/7a028e9400b547d59f104cb113fe6f43619da287))
+
 ## [1.3.0](https://github.com/tr8team/typescript-github-action-template/compare/v1.2.1...v1.3.0) (2023-03-04)
 
 
