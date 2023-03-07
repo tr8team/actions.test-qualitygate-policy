@@ -1,31 +1,32 @@
 import { chai, describe, it, should } from "vitest";
 import { IntermediateEntry } from "../../../src/lib/output";
 import { None, Some } from "../../../src/lib/core/option";
+
 // @ts-ignore
-import helper from "../../helper";
-import { DeltaCoveragePolicy, DeltaCoveragePolicyConfig } from "../../../src/lib/policy/delta-coverage-policy";
+import helper from "../../helper.js";
+import { MinCoveragePolicy, MinCoveragePolicyConfig } from "../../../src/lib/policy/min-coverage-policy";
 
-should()
+should();
 
-chai.use(helper)
+chai.use(helper);
 
-describe("DeltaCoveragePolicy", () => {
+describe("MinCoveragePolicy", () => {
 
   describe("evaluate", () => {
 
-    const config: DeltaCoveragePolicyConfig = {
-      fail: 1,
-      warn: 1.5,
+    const config: MinCoveragePolicyConfig = {
+      fail: 60,
+      warn: 80,
       metric: "line",
-      type: "delta-coverage-policy",
-
+      type: "min-coverage-policy",
     }
 
-    const policy = new DeltaCoveragePolicy(
-      "Unit Test Coverage cannot drop by more than 1%",
+    const policy = new MinCoveragePolicy(
+      "No unit test coverage under 60%",
       "Unit Test Coverage",
       config
     );
+
 
     it("should return the same object if the target is not found", async () => {
 
@@ -106,6 +107,64 @@ describe("DeltaCoveragePolicy", () => {
 
     it("should return the same object if the target is found but the type is not test-coverage",async function() {
 
+        const current: IntermediateEntry = {
+          sha: "random-sha",
+          url: "random-url",
+          action: "action",
+          items: [
+            {
+              name: "Unit Test Coverage",
+              url: "sample-url",
+              data: {
+                type: "test-result",
+                skip: 0,
+                fail: 0,
+                pass: 0,
+                resultDetails: {
+                  fail: [
+                    "Sample Policy"
+                  ],
+                  pass: [],
+                  warn: [],
+                }
+              }
+            }
+          ]
+        };
+        const expected = {
+          sha: "random-sha",
+          url: "random-url",
+          action: "action",
+          items: [
+            {
+              name: "Unit Test Coverage",
+              url: "sample-url",
+              data: {
+                type: "test-result",
+                skip: 0,
+                fail: 0,
+                pass: 0,
+                resultDetails: {
+                  fail: [
+                    "Sample Policy"],
+                  pass: [],
+                  warn: [],
+                }
+              }
+            }
+          ]
+        };
+
+        // act
+        const actual = await policy.evaluate(current);
+
+        // assert
+        actual.should.deep.equal(expected);
+
+    });
+
+    it("should return with resultDetails pass increment by 1 if all coverage is higher than warning threshold", async function() {
+
       const current: IntermediateEntry = {
         sha: "random-sha",
         url: "random-url",
@@ -115,16 +174,23 @@ describe("DeltaCoveragePolicy", () => {
             name: "Unit Test Coverage",
             url: "sample-url",
             data: {
-              type: "test-result",
-              skip: 0,
-              fail: 0,
-              pass: 0,
+              type: "test-coverage",
+              branch: 5,
+              function: 8,
+              line: 80,
+              statement: 10,
+              delta: None(),
               resultDetails: {
                 fail: [
                   "Sample Policy"
                 ],
-                pass: [],
-                warn: [],
+                pass: [
+                  "All Test Must Pass",
+                  "Skipped test must be lower than 20%",
+                ],
+                warn: [
+                  "Function coverage must be higher than 80%",
+                ],
               }
             }
           }
@@ -139,15 +205,24 @@ describe("DeltaCoveragePolicy", () => {
             name: "Unit Test Coverage",
             url: "sample-url",
             data: {
-              type: "test-result",
-              skip: 0,
-              fail: 0,
-              pass: 0,
+              type: "test-coverage",
+              branch: 5,
+              function: 8,
+              line: 80,
+              statement: 10,
+              delta: None(),
               resultDetails: {
                 fail: [
-                  "Sample Policy"],
-                pass: [],
-                warn: [],
+                  "Sample Policy"
+                ],
+                pass: [
+                  "All Test Must Pass",
+                  "Skipped test must be lower than 20%",
+                  "No unit test coverage under 60%"
+                ],
+                warn: [
+                  "Function coverage must be higher than 80%",
+                ],
               }
             }
           }
@@ -158,272 +233,29 @@ describe("DeltaCoveragePolicy", () => {
       const actual = await policy.evaluate(current);
 
       // assert
-      actual.should.deep.equal(expected);
+      return actual.should.be.congruent(expected);
+
 
     });
 
-    describe("pass cases", function() {
-
-      it("should return with resultDetails pass increment by 1 if metric is higher", async function() {
-
-        const current: IntermediateEntry = {
-          sha: "random-sha",
-          url: "random-url",
-          action: "action",
-          items: [
-            {
-              name: "Unit Test Coverage",
-              url: "sample-url",
-              data: {
-                type: "test-coverage",
-                branch: 80,
-                function: 80,
-                line: 99,
-                statement: 72,
-                delta: Some({
-                  branch: -5,
-                  function: -5,
-                  line: 5,
-                  statement: -5,
-                }),
-                resultDetails: {
-                  fail: [
-                    "Sample Policy"
-                  ],
-                  pass: [
-                    "All Test Must Pass",
-                    "Skipped test must be lower than 20%",
-                  ],
-                  warn: [
-                    "Function coverage must be higher than 80%",
-                  ],
-                }
-              }
-            }
-          ]
-        };
-        const expected = {
-          sha: "random-sha",
-          url: "random-url",
-          action: "action",
-          items: [
-            {
-              name: "Unit Test Coverage",
-              url: "sample-url",
-              data: {
-                type: "test-coverage",
-                branch: 80,
-                function: 80,
-                line: 99,
-                statement: 72,
-                delta: Some({
-                  branch: -5,
-                  function: -5,
-                  line: 5,
-                  statement: -5,
-                }),
-                resultDetails: {
-                  fail: [
-                    "Sample Policy"
-                  ],
-                  pass: [
-                    "All Test Must Pass",
-                    "Skipped test must be lower than 20%",
-                    "Unit Test Coverage cannot drop by more than 1%",
-                  ],
-                  warn: [
-                    "Function coverage must be higher than 80%",
-                  ],
-                }
-              }
-            }
-          ]
-        };
-
-        // act
-        const actual = await policy.evaluate(current);
-
-        // assert
-        return actual.should.be.congruent(expected);
-
-
-      });
-
-      it("should return with resultDetails pass increment by 1 if maximum possible increase is lower than threshold", async function() {
-
-
-        const current: IntermediateEntry = {
-          sha: "random-sha",
-          url: "random-url",
-          action: "action",
-          items: [
-            {
-              name: "Unit Test Coverage",
-              url: "sample-url",
-              data: {
-                type: "test-coverage",
-                branch: 100,
-                function: 100,
-                line: 100,
-                statement: 100,
-                delta: Some({
-                  branch: -3,
-                  function: -5,
-                  line: 0.5,
-                  statement: -5,
-                }),
-                resultDetails: {
-                  fail: [
-                    "Sample Policy"
-                  ],
-                  pass: [
-                    "All Test Must Pass",
-                  ],
-                  warn: [
-                    "Function coverage must be higher than 80%",
-                  ],
-                }
-              }
-            }
-          ]
-        };
-        const expected = {
-          sha: "random-sha",
-          url: "random-url",
-          action: "action",
-          items: [
-            {
-              name: "Unit Test Coverage",
-              url: "sample-url",
-              data: {
-                type: "test-coverage",
-                branch: 100,
-                function: 100,
-                line: 100,
-                statement: 100,
-                delta: Some({
-                  branch: -3,
-                  function: -5,
-                  line: 0.5,
-                  statement: -5,
-                }),
-                resultDetails: {
-                  fail: [
-                    "Sample Policy"
-                  ],
-                  pass: [
-                    "All Test Must Pass",
-                    "Unit Test Coverage cannot drop by more than 1%",
-                  ],
-                  warn: [
-                    "Function coverage must be higher than 80%",
-                  ],
-                }
-              }
-            }
-          ]
-        };
-
-        // act
-        const actual = await policy.evaluate(current);
-
-        // assert
-        return actual.should.be.congruent(expected);
-
-      });
-
-
-      it("should return with resultDetails pass increment by 1 if delta is None", async function() {
-
-        const current: IntermediateEntry = {
-          sha: "random-sha",
-          url: "random-url",
-          action: "action",
-          items: [
-            {
-              name: "Unit Test Coverage",
-              url: "sample-url",
-              data: {
-                type: "test-coverage",
-                branch: 15,
-                function: 16,
-                line: 7,
-                statement: 80,
-                delta: None(),
-                resultDetails: {
-                  fail: [
-                    "Sample Policy"
-                  ],
-                  pass: [
-                    "All Test Must Pass",
-                    "Unit Test Coverage cannot drop by more than 5%",
-                  ],
-                  warn: [
-                    "Function coverage must be higher than 80%",
-                  ],
-                }
-              }
-            }
-          ]
-        };
-        const expected = {
-          sha: "random-sha",
-          url: "random-url",
-          action: "action",
-          items: [
-            {
-              name: "Unit Test Coverage",
-              url: "sample-url",
-              data: {
-                type: "test-coverage",
-                branch: 15,
-                function: 16,
-                line: 7,
-                statement: 80,
-                delta: None(),
-                resultDetails: {
-                  fail: [
-                    "Sample Policy"
-                  ],
-                  pass: [
-                    "All Test Must Pass",
-                    "Unit Test Coverage cannot drop by more than 5%",
-                  ],
-                  warn: [
-                    "Function coverage must be higher than 80%",
-                  ],
-                }
-              }
-            }
-          ]
-        };
-
-        // act
-        const actual = await policy.evaluate(current);
-
-        // assert
-        return actual.should.be.congruent(expected);
-
-      });
-
-    })
-
-    describe("target metric coverage is lower than warning threshold but higher than fail", () => {
+    describe("any coverage is lower than warning threshold but higher than fail", () => {
 
       it("should return resultDetails warn increment by 1 if line coverage is lower than warning threshold but higher than fail", async function() {
 
-        const lineConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+        const lConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "line",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const linePolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const lPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
-          lineConfig
+          lConfig
         );
+
+
         const current: IntermediateEntry = {
           sha: "random-sha",
           url: "random-url",
@@ -435,15 +267,10 @@ describe("DeltaCoveragePolicy", () => {
               data: {
                 type: "test-coverage",
                 branch: 96,
-                function: 99,
+                function: 20,
                 line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: -5,
-                  function: -2,
-                  line: 1.2,
-                  statement: 0,
-                }),
+                statement: 50,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -471,15 +298,10 @@ describe("DeltaCoveragePolicy", () => {
               data: {
                 type: "test-coverage",
                 branch: 96,
-                function: 99,
+                function: 20,
                 line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: -5,
-                  function: -2,
-                  line: 1.2,
-                  statement: 0,
-                }),
+                statement: 50,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -490,7 +312,7 @@ describe("DeltaCoveragePolicy", () => {
                   ],
                   warn: [
                     "Function coverage must be higher than 80%",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                 }
               }
@@ -499,7 +321,7 @@ describe("DeltaCoveragePolicy", () => {
         };
 
         // act
-        const actual = await linePolicy.evaluate(current);
+        const actual = await lPolicy.evaluate(current);
 
         // assert
         return actual.should.be.congruent(expected);
@@ -508,18 +330,19 @@ describe("DeltaCoveragePolicy", () => {
       });
 
       it("should return resultDetails warn increment by 1 if statement coverage is lower than warning threshold but higher than fail", async function() {
-        const sConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+        const sConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "statement",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const sPolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const sPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
           sConfig
         );
+
         const current: IntermediateEntry = {
           sha: "random-sha",
           url: "random-url",
@@ -530,16 +353,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 70,
-                delta: Some({
-                  branch: -50,
-                  function: -2,
-                  line: 5,
-                  statement: 1.2,
-                }),
+                branch: 36,
+                function: 58,
+                line: 29,
+                statement: 69,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -566,16 +384,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 70,
-                delta: Some({
-                  branch: -50,
-                  function: -2,
-                  line: 5,
-                  statement: 1.2,
-                }),
+                branch: 36,
+                function: 58,
+                line: 29,
+                statement: 69,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -586,7 +399,7 @@ describe("DeltaCoveragePolicy", () => {
                   ],
                   warn: [
                     "Function coverage must be higher than 80%",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                 }
               }
@@ -603,18 +416,21 @@ describe("DeltaCoveragePolicy", () => {
       });
 
       it("should return resultDetails warn increment by 1 if function coverage is lower than warning threshold but higher than fail", async function() {
-        const fConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+
+
+        const fConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "function",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const fPolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const fPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
           fConfig
         );
+
         const current: IntermediateEntry = {
           sha: "random-sha",
           url: "random-url",
@@ -625,16 +441,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: 5,
-                  function: 1.2,
-                  line: 1,
-                  statement: -2,
-                }),
+                branch: 26,
+                function: 69,
+                line: 93,
+                statement: 30,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -661,16 +472,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: 5,
-                  function: 1.2,
-                  line: 1,
-                  statement: -2,
-                }),
+                branch: 26,
+                function: 69,
+                line: 93,
+                statement: 30,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -681,7 +487,7 @@ describe("DeltaCoveragePolicy", () => {
                   ],
                   warn: [
                     "Function coverage must be higher than 80%",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                 }
               }
@@ -697,15 +503,16 @@ describe("DeltaCoveragePolicy", () => {
       });
 
       it("should return resultDetails warn increment by 1 if branch coverage is lower than warning threshold but higher than fail", async function() {
-        const bConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+
+        const bConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "branch",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const bPolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const bPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
           bConfig
         );
@@ -719,16 +526,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: 1.2,
-                  function: -7,
-                  line: 1,
-                  statement: 2,
-                }),
+                branch: 60,
+                function: 29,
+                line: 39,
+                statement: 10,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -755,16 +557,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: 1.2,
-                  function: -7,
-                  line: 1,
-                  statement: 2,
-                }),
+                branch: 60,
+                function: 29,
+                line: 39,
+                statement: 10,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -775,7 +572,7 @@ describe("DeltaCoveragePolicy", () => {
                   ],
                   warn: [
                     "Function coverage must be higher than 80%",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                 }
               }
@@ -795,18 +592,18 @@ describe("DeltaCoveragePolicy", () => {
 
     describe("any coverage is lower than fail threshold", function() {
 
-      it("should return resultDetails fail increment by 1 if function coverage is lower than fail threshold", async function() {
-        const lineConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+      it("should return resultDetails fail increment by 1 if line coverage is lower than fail threshold", async function() {
+        const lConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "line",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const linePolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const lPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
-          lineConfig
+          lConfig
         );
         const current: IntermediateEntry = {
           sha: "random-sha",
@@ -818,16 +615,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: 5,
-                  function: -2,
-                  line: 0,
-                  statement: 0,
-                }),
+                branch: 56,
+                function: 59,
+                line: 29,
+                statement: 80,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -854,20 +646,15 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: 5,
-                  function: -2,
-                  line: 0,
-                  statement: 0,
-                }),
+                branch: 56,
+                function: 59,
+                line: 29,
+                statement: 80,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                   pass: [
                     "All Test Must Pass",
@@ -883,26 +670,27 @@ describe("DeltaCoveragePolicy", () => {
         };
 
         // act
-        const actual = await linePolicy.evaluate(current);
+        const actual = await lPolicy.evaluate(current);
 
         // assert
         return actual.should.be.congruent(expected);
 
       });
 
-      it("should return resultDetails fail increment by 1 if line coverage is lower than fail threshold", async function() {
-        const sConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+      it("should return resultDetails fail increment by 1 if statement coverage is lower than fail threshold", async function() {
+        const sConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "statement",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const sPolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const sPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
           sConfig
         );
+
         const current: IntermediateEntry = {
           sha: "random-sha",
           url: "random-url",
@@ -913,16 +701,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 50,
-                delta: Some({
-                  branch: 5,
-                  function: 2,
-                  line: -2,
-                  statement: 0,
-                }),
+                branch: 26,
+                function: 20,
+                line: 59,
+                statement: 59,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -949,20 +732,15 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 50,
-                delta: Some({
-                  branch: 5,
-                  function: 2,
-                  line: -2,
-                  statement: 0,
-                }),
+                branch: 26,
+                function: 20,
+                line: 59,
+                statement: 59,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                   pass: [
                     "All Test Must Pass",
@@ -985,16 +763,16 @@ describe("DeltaCoveragePolicy", () => {
 
       });
 
-      it("should return resultDetails fail increment by 1 if statement coverage is lower than fail threshold", async function() {
-        const fConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+      it("should return resultDetails fail increment by 1 if function coverage is lower than fail threshold", async function() {
+        const fConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "function",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const fPolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const fPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
           fConfig
         );
@@ -1008,16 +786,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 70,
-                delta: Some({
-                  branch: 5,
-                  function: -10,
-                  line: 3,
-                  statement: -2,
-                }),
+                branch: 60,
+                function: 6,
+                line: 50,
+                statement: 59,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -1044,20 +817,15 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 70,
-                delta: Some({
-                  branch: 5,
-                  function: -10,
-                  line: 3,
-                  statement: -2,
-                }),
+                branch: 60,
+                function: 6,
+                line: 50,
+                statement: 59,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                   pass: [
                     "All Test Must Pass",
@@ -1082,15 +850,15 @@ describe("DeltaCoveragePolicy", () => {
       });
 
       it("should return resultDetails fail increment by 1 if branch coverage is lower than fail threshold", async function() {
-        const bConfig: DeltaCoveragePolicyConfig = {
-          fail: 1,
-          warn: 1.5,
+        const bConfig: MinCoveragePolicyConfig = {
+          fail: 60,
+          warn: 80,
           metric: "branch",
-          type: "delta-coverage-policy",
+          type: "min-coverage-policy",
         }
 
-        const bPolicy = new DeltaCoveragePolicy(
-          "Unit Test Coverage cannot drop by more than 1%",
+        const bPolicy = new MinCoveragePolicy(
+          "No unit test coverage under 60%",
           "Unit Test Coverage",
           bConfig
         );
@@ -1104,16 +872,11 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: -2,
-                  function: 2,
-                  line: 5,
-                  statement: 0,
-                }),
+                branch: 46,
+                function: 20,
+                line: 5,
+                statement: 9,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -1140,20 +903,15 @@ describe("DeltaCoveragePolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-coverage",
-                branch: 96,
-                function: 99,
-                line: 69,
-                statement: 100,
-                delta: Some({
-                  branch: -2,
-                  function: 2,
-                  line: 5,
-                  statement: 0,
-                }),
+                branch: 46,
+                function: 20,
+                line: 5,
+                statement: 9,
+                delta: None(),
                 resultDetails: {
                   fail: [
                     "Sample Policy",
-                    "Unit Test Coverage cannot drop by more than 1%",
+                    "No unit test coverage under 60%"
                   ],
                   pass: [
                     "All Test Must Pass",
@@ -1178,7 +936,6 @@ describe("DeltaCoveragePolicy", () => {
 
 
     });
-
 
   });
 

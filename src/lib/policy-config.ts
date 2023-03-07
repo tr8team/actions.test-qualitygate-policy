@@ -10,7 +10,8 @@ import {
 import { anyCoveragePolicy } from "./policy/any-coverage-policy";
 import { anyDeltaCoveragePolicy } from "./policy/any-delta-coverage-policy";
 import { deltaCoveragePolicy } from "./policy/delta-coverage-policy";
-import { coverageMetric, testMetric } from "./enums";
+import { testMetric } from "./enums";
+import { minCoveragePolicy } from "./policy/min-coverage-policy";
 
 // TODO: future implementations
 // const averageCoveragePolicy = object({
@@ -28,15 +29,6 @@ import { coverageMetric, testMetric } from "./enums";
 // })
 //   .required()
 //   .strict();
-
-const minCoveragePolicy = object({
-  type: literal("min-coverage-policy"),
-  metric: coverageMetric,
-  warn: number().min(0).max(100),
-  fail: number().min(0).max(100),
-})
-  .required()
-  .strict();
 
 const maxLiteralTestPolicy = object({
   type: literal("max-literal-test-policy"),
@@ -99,5 +91,4 @@ type PolicyConfig = z.infer<typeof policyConfig>;
 type PolicyConfigs = z.infer<typeof policyConfigs>;
 
 export { policyConfig, policyConfigs };
-
-export type { PolicyConfig, PolicyConfigs };
+export type { PolicyConfigs, PolicyConfig };
