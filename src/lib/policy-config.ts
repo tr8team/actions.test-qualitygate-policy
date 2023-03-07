@@ -14,6 +14,7 @@ import { testMetric } from "./enums";
 import { minCoveragePolicy } from "./policy/min-coverage-policy";
 import { maxLiteralTestPolicy } from "./policy/max-literal-test-policy";
 import { minLiteralTestPolicy } from "./policy/min-literal-test-policy";
+import { maxPercentageTestPolicy } from "./policy/max-percentage-test-policy";
 
 // TODO: future implementations
 // const averageCoveragePolicy = object({
@@ -31,15 +32,6 @@ import { minLiteralTestPolicy } from "./policy/min-literal-test-policy";
 // })
 //   .required()
 //   .strict();
-
-const maxPercentageTestPolicy = object({
-  type: literal("max-percentage-test-policy"),
-  metric: testMetric,
-  warn: number().min(0).max(100),
-  fail: number().min(0).max(100),
-})
-  .required()
-  .strict();
 
 const minPercentageTestPolicy = object({
   type: literal("min-percentage-test-policy"),
