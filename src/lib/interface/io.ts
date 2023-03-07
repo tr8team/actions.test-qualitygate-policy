@@ -15,6 +15,8 @@ interface ActionIO {
   set(key: string, value: string): void;
 
   setObject(key: string, value: object): void;
+
+  setFail(message: string | Error): void;
 }
 
 export type { ActionIO };

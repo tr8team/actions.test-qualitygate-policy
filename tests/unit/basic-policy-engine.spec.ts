@@ -298,10 +298,10 @@ describe("Basic Policy Engine", () => {
       const policy1 = instance(policy1Mock);
       const policy2 = instance(policy2Mock);
 
-      const engine = new BasicPolicyEngine([policy1, policy2], mapper);
+      const engine = new BasicPolicyEngine(mapper);
 
       // act
-      const result = await engine.evaluate(current,Some(base));
+      const result = await engine.evaluate([policy1, policy2], current,Some(base));
 
       verify(mapperMock.inputToIntermediate(anything(), anything())).once();
       verify(policy1Mock.evaluate(anything())).once();

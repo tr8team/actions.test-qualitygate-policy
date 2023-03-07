@@ -53,6 +53,11 @@ type OutputElement = { data: OutputMetadata } & Input;
 
 type OutputEntry = { items: OutputElement[] } & HistoryEntry;
 
+interface Output {
+  current: OutputEntry;
+  history: OutputEntry[];
+}
+
 export type {
   IntermediateMetadata,
   IntermediateTestCoverageMetadata,
@@ -65,4 +70,5 @@ export type {
   OutputEntry,
   OutputElement,
   OutputMetadata,
+  Output,
 };

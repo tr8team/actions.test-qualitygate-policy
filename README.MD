@@ -38,7 +38,8 @@ jobs:
 
 | parameter | description |
 | --- | --- |
-| markdown | Markdown output |
+| current | Current Commit's data with quality gate information |
+| history | History Commits' data with quality gate information |
 <!-- action-docs-outputs -->
 
 <!-- action-docs-runs -->

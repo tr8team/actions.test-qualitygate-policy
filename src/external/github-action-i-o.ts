@@ -1,5 +1,5 @@
 import { ActionIO } from "../lib/interface/io.js";
-import { getInput, setOutput } from "@actions/core";
+import { getInput, setFailed, setOutput } from "@actions/core";
 import { parseJSON } from "../lib/util.js";
 import { Validator } from "../lib/interface/validator.js";
 import { Ok, Result } from "../lib/core/result.js";
@@ -36,6 +36,11 @@ class GithubActionIO implements ActionIO {
     if (raw === "") return Ok(None());
 
     return this.getObject(key, validator).map((o) => Some(o));
+  }
+
+  /* istanbul ignore next */
+  setFail(message: string | Error): void {
+    setFailed(message);
   }
 }
 

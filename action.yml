@@ -16,8 +16,10 @@ inputs:
     description: "Quality Gate policies"
     default: "default value if applicable"
 outputs:
-  markdown:
-    description: "Markdown output"
+  current:
+    description: "Current Commit's data with quality gate information"
+  history:
+    description: "History Commits' data with quality gate information"
 runs:
   using: "node16"
   main: "dist/index.js"
