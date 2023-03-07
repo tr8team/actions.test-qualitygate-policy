@@ -1,20 +1,12 @@
-import {
-  array,
-  discriminatedUnion,
-  literal,
-  number,
-  object,
-  string,
-  z,
-} from "zod";
+import { array, discriminatedUnion, object, string, z } from "zod";
 import { anyCoveragePolicy } from "./policy/any-coverage-policy";
 import { anyDeltaCoveragePolicy } from "./policy/any-delta-coverage-policy";
 import { deltaCoveragePolicy } from "./policy/delta-coverage-policy";
-import { testMetric } from "./enums";
 import { minCoveragePolicy } from "./policy/min-coverage-policy";
 import { maxLiteralTestPolicy } from "./policy/max-literal-test-policy";
 import { minLiteralTestPolicy } from "./policy/min-literal-test-policy";
 import { maxPercentageTestPolicy } from "./policy/max-percentage-test-policy";
+import { minPercentageTestPolicy } from "./policy/min-percentage-test-policy";
 
 // TODO: future implementations
 // const averageCoveragePolicy = object({
@@ -32,15 +24,6 @@ import { maxPercentageTestPolicy } from "./policy/max-percentage-test-policy";
 // })
 //   .required()
 //   .strict();
-
-const minPercentageTestPolicy = object({
-  type: literal("min-percentage-test-policy"),
-  metric: testMetric,
-  warn: number().min(0).max(100),
-  fail: number().min(0).max(100),
-})
-  .required()
-  .strict();
 
 const policyTypes = discriminatedUnion("type", [
   anyCoveragePolicy,
