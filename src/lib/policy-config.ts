@@ -5,11 +5,12 @@ import {
   number,
   object,
   string,
-  union,
   z,
 } from "zod";
 import { anyCoveragePolicy } from "./policy/any-coverage-policy";
 import { anyDeltaCoveragePolicy } from "./policy/any-delta-coverage-policy";
+import { deltaCoveragePolicy } from "./policy/delta-coverage-policy";
+import { coverageMetric, testMetric } from "./enums";
 
 // TODO: future implementations
 // const averageCoveragePolicy = object({
@@ -28,22 +29,6 @@ import { anyDeltaCoveragePolicy } from "./policy/any-delta-coverage-policy";
 //   .required()
 //   .strict();
 
-const coverageMetric = union([
-  literal("line"),
-  literal("function"),
-  literal("branch"),
-  literal("statement"),
-]);
-
-const deltaCoveragePolicy = object({
-  type: literal("delta-coverage-policy"),
-  warn: number().min(-100).max(100),
-  fail: number().min(-100).max(100),
-  metric: coverageMetric,
-})
-  .required()
-  .strict();
-
 const minCoveragePolicy = object({
   type: literal("min-coverage-policy"),
   metric: coverageMetric,
@@ -52,8 +37,6 @@ const minCoveragePolicy = object({
 })
   .required()
   .strict();
-
-const testMetric = union([literal("pass"), literal("fail"), literal("skip")]);
 
 const maxLiteralTestPolicy = object({
   type: literal("max-literal-test-policy"),
