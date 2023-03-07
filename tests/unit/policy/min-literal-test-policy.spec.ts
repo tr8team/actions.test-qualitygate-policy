@@ -4,25 +4,25 @@ import { None, Some } from "../../../src/lib/core/option";
 
 // @ts-ignore
 import helper from "../../helper.js";
-import { MaxLiteralTestPolicy, MaxLiteralTestPolicyConfig } from "../../../src/lib/policy/max-literal-test-policy";
+import { MinLiteralTestPolicy, MinLiteralTestPolicyConfig } from "../../../src/lib/policy/min-literal-test-policy";
 
 should();
 
 chai.use(helper);
 
-describe("MaxLiteralTestPolicy", () => {
+describe("MinLiteralTestPolicy", () => {
 
   describe("evaluate", () => {
 
-    const config: MaxLiteralTestPolicyConfig = {
-      fail: 10,
-      warn: 5,
-      metric: "skip",
-      type: "max-literal-test-policy",
+    const config: MinLiteralTestPolicyConfig = {
+      fail: 5,
+      warn: 10,
+      metric: "pass",
+      type: "min-literal-test-policy",
     }
 
-    const policy = new MaxLiteralTestPolicy(
-      "Under 10 skipped test",
+    const policy = new MinLiteralTestPolicy(
+      "At least 5 passed test",
       "Unit Test",
       config
     );
@@ -218,7 +218,7 @@ describe("MaxLiteralTestPolicy", () => {
                 pass: [
                   "All Test Must Pass",
                   "Skipped test must be lower than 20%",
-                  "Under 10 skipped test",
+                  "At least 5 passed test",
                 ],
                 warn: [
                   "Function coverage must be higher than 80%",
@@ -240,16 +240,16 @@ describe("MaxLiteralTestPolicy", () => {
 
     describe("test metric is lower than warning threshold but higher than fail", () => {
 
-      it("should return resultDetails warn increment by 1 if skip is lower than warning threshold but higher than fail", async function() {
+      it("should return resultDetails warn increment by 1 if skip is higher than warning threshold but lower than fail", async function() {
 
-        const sConfig: MaxLiteralTestPolicyConfig = {
-          fail: 10,
-          warn: 5,
+        const sConfig: MinLiteralTestPolicyConfig = {
+          fail: 5,
+          warn: 10,
           metric: "skip",
-          type: "max-literal-test-policy",
+          type: "min-literal-test-policy",
         }
 
-        const sPolicy = new MaxLiteralTestPolicy(
+        const sPolicy = new MinLiteralTestPolicy(
           "Random Name",
           "Unit Test",
           sConfig
@@ -325,15 +325,15 @@ describe("MaxLiteralTestPolicy", () => {
 
       });
 
-      it("should return resultDetails warn increment by 1 if fail is lower than warning threshold but higher than fail", async function() {
-        const fConfig: MaxLiteralTestPolicyConfig = {
-          fail: 10,
-          warn: 5,
+      it("should return resultDetails warn increment by 1 if fail is higher than warning threshold but lower than fail", async function() {
+        const fConfig: MinLiteralTestPolicyConfig = {
+          fail: 5,
+          warn: 10,
           metric: "fail",
-          type: "max-literal-test-policy",
+          type: "min-literal-test-policy",
         }
 
-        const fPolicy = new MaxLiteralTestPolicy(
+        const fPolicy = new MinLiteralTestPolicy(
           "Random Name",
           "Unit Test",
           fConfig
@@ -407,17 +407,17 @@ describe("MaxLiteralTestPolicy", () => {
 
       });
 
-      it("should return resultDetails warn increment by 1 if pass is lower than warning threshold but higher than fail", async function() {
+      it("should return resultDetails warn increment by 1 if pass is higher than warning threshold but lower than fail", async function() {
 
 
-        const pConfig: MaxLiteralTestPolicyConfig = {
-          fail: 10,
-          warn: 5,
+        const pConfig: MinLiteralTestPolicyConfig = {
+          fail: 5,
+          warn: 10,
           metric: "pass",
-          type: "max-literal-test-policy",
+          type: "min-literal-test-policy",
         }
 
-        const pPolicy = new MaxLiteralTestPolicy(
+        const pPolicy = new MinLiteralTestPolicy(
           "Random Name",
           "Unit Test",
           pConfig
@@ -495,15 +495,15 @@ describe("MaxLiteralTestPolicy", () => {
 
     describe("test metric is lower than fail threshold", function() {
 
-      it("should return resultDetails fail increment by 1 if skip is lower than fail threshold", async function() {
-        const sConfig: MaxLiteralTestPolicyConfig = {
-          fail: 10,
-          warn: 5,
+      it("should return resultDetails fail increment by 1 if skip is higher than fail threshold", async function() {
+        const sConfig: MinLiteralTestPolicyConfig = {
+          fail: 5,
+          warn: 10,
           metric: "skip",
-          type: "max-literal-test-policy",
+          type: "min-literal-test-policy",
         }
 
-        const sPolicy = new MaxLiteralTestPolicy(
+        const sPolicy = new MinLiteralTestPolicy(
           "Random Name",
           "Unit Test",
           sConfig
@@ -520,7 +520,7 @@ describe("MaxLiteralTestPolicy", () => {
                 type: "test-result",
                 pass: 0,
                 fail: 0,
-                skip: 20,
+                skip: 2,
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -549,7 +549,7 @@ describe("MaxLiteralTestPolicy", () => {
                 type: "test-result",
                 pass: 0,
                 fail: 0,
-                skip: 20,
+                skip: 2,
                 resultDetails: {
                   fail: [
                     "Sample Policy",
@@ -576,15 +576,15 @@ describe("MaxLiteralTestPolicy", () => {
 
       });
 
-      it("should return resultDetails fail increment by 1 if fail is lower than fail threshold", async function() {
-        const fConfig: MaxLiteralTestPolicyConfig = {
-          fail: 10,
-          warn: 5,
-          metric: "fail",
-          type: "max-literal-test-policy",
+      it("should return resultDetails fail increment by 1 if fail is higher than fail threshold", async function() {
+        const fConfig: MinLiteralTestPolicyConfig = {
+          fail: 5,
+          warn: 10,
+          metric: "skip",
+          type: "min-literal-test-policy",
         }
 
-        const fPolicy = new MaxLiteralTestPolicy(
+        const fPolicy = new MinLiteralTestPolicy(
           "Random Name",
           "Unit Test",
           fConfig
@@ -601,8 +601,8 @@ describe("MaxLiteralTestPolicy", () => {
               data: {
                 type: "test-result",
                 pass: 0,
-                fail: 20,
-                skip: 0,
+                fail: 3,
+                skip: 3,
                 resultDetails: {
                   fail: [
                     "Sample Policy"
@@ -630,8 +630,8 @@ describe("MaxLiteralTestPolicy", () => {
               data: {
                 type: "test-result",
                 pass: 0,
-                fail: 20,
-                skip: 0,
+                fail: 3,
+                skip: 3,
                 resultDetails: {
                   fail: [
                     "Sample Policy",
@@ -658,15 +658,15 @@ describe("MaxLiteralTestPolicy", () => {
 
       });
 
-      it("should return resultDetails fail increment by 1 if pass is lower than fail threshold", async function() {
-        const pConfig: MaxLiteralTestPolicyConfig = {
-          fail: 10,
-          warn: 5,
-          metric: "pass",
-          type: "max-literal-test-policy",
+      it("should return resultDetails fail increment by 1 if pass is higher than fail threshold", async function() {
+        const pConfig: MinLiteralTestPolicyConfig = {
+          fail: 5,
+          warn: 10,
+          metric: "skip",
+          type: "min-literal-test-policy",
         }
 
-        const pPolicy = new MaxLiteralTestPolicy(
+        const pPolicy = new MinLiteralTestPolicy(
           "Random Name",
           "Unit Test",
           pConfig
@@ -682,7 +682,7 @@ describe("MaxLiteralTestPolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-result",
-                pass: 20,
+                pass: 1,
                 fail: 0,
                 skip: 0,
                 resultDetails: {
@@ -711,7 +711,7 @@ describe("MaxLiteralTestPolicy", () => {
               url: "sample-url",
               data: {
                 type: "test-result",
-                pass: 20,
+                pass: 1,
                 fail: 0,
                 skip: 0,
                 resultDetails: {
