@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/tr8team/actions.test-qualitygate/compare/v1.0.0...v1.0.1) (2023-03-08)
+
+
+### Bug Fixes
+
+* output optional viewable ([d449046](https://github.com/tr8team/actions.test-qualitygate/commit/d449046b0940be9e87121096f6bd625a07d267ca))
+
 ## 1.0.0 (2023-03-07)
 
 
