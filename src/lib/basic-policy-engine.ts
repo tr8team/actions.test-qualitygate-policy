@@ -18,7 +18,7 @@ class BasicPolicyEngine implements PolicyEngine {
       async (prev, x) => await x.evaluate(await prev),
       Promise.resolve(start)
     );
-    return this.#mapper.intermediateToOutput(intermediate);
+    return await this.#mapper.intermediateToOutput(intermediate);
   }
 
   constructor(mapper: ElementMapper) {

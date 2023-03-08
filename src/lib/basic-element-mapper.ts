@@ -97,33 +97,57 @@ class BasicElementMapper implements ElementMapper {
     };
   }
 
-  toOutputMetadata({ url, name, data }: IntermediateElement): OutputElement {
-    return {
-      url,
-      name,
-      data: {
-        ...data,
-        result:
-          data.resultDetails.fail.length > 0
-            ? "fail"
-            : data.resultDetails.warn.length > 0
-            ? "warn"
-            : "pass",
-      },
-    };
+  async toOutputMetadata({
+    url,
+    name,
+    data,
+  }: IntermediateElement): Promise<OutputElement> {
+    if (data.type === "test-coverage") {
+      const { delta, ...rest } = data;
+      return {
+        url,
+        name,
+        data: {
+          ...rest,
+          delta: await delta.native(),
+          result:
+            data.resultDetails.fail.length > 0
+              ? "fail"
+              : data.resultDetails.warn.length > 0
+              ? "warn"
+              : "pass",
+        },
+      };
+    } else {
+      return {
+        url,
+        name,
+        data: {
+          ...data,
+          result:
+            data.resultDetails.fail.length > 0
+              ? "fail"
+              : data.resultDetails.warn.length > 0
+              ? "warn"
+              : "pass",
+        },
+      };
+    }
   }
 
-  intermediateToOutput({
+  async intermediateToOutput({
     sha,
     url,
     items,
     action,
-  }: IntermediateEntry): OutputEntry {
+  }: IntermediateEntry): Promise<OutputEntry> {
+    const itemPromises = items.map((x) => this.toOutputMetadata(x));
+    const awaited = await Promise.all(itemPromises);
     return {
       url,
       sha,
       action,
-      items: items.map((x) => this.toOutputMetadata(x)),
+      items: awaited,
     };
   }
 }

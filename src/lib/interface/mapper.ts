@@ -8,7 +8,7 @@ interface ElementMapper {
     base: Option<HistoryEntry>
   ): IntermediateEntry;
 
-  intermediateToOutput(h: IntermediateEntry): OutputEntry;
+  intermediateToOutput(h: IntermediateEntry): Promise<OutputEntry>;
 }
 
 export { ElementMapper };

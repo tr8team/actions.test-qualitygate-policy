@@ -1140,7 +1140,7 @@ describe("BasicElementMapper", function() {
 
   describe("intermediateToOutput", function() {
 
-    it("should convert a history entry to output", function() {
+    it("should convert a history entry to output", async function() {
 
       // dummy IntermediateEntry data
       const input: IntermediateEntry = {
@@ -1192,14 +1192,14 @@ describe("BasicElementMapper", function() {
       };
 
       // act
-      const act = mapper.intermediateToOutput(input);
+      const act = await mapper.intermediateToOutput(input);
 
       // assert
       act.should.deep.equal(expected);
 
     });
 
-    it("should result in warn if warns are not empty and fails are empty", function() {
+    it("should result in warn if warns are not empty and fails are empty", async function() {
 
       // dummy IntermediateEntry data
       const input: IntermediateEntry = {
@@ -1259,14 +1259,14 @@ describe("BasicElementMapper", function() {
       };
 
       // act
-      const act = mapper.intermediateToOutput(input);
+      const act = await mapper.intermediateToOutput(input);
 
       // assert
       act.should.deep.equal(expected);
 
     });
 
-    it("should result in fail if fails are not empty", function() {
+    it("should result in fail if fails are not empty", async function() {
 
       // dummy IntermediateEntry data
       const input: IntermediateEntry = {
@@ -1322,11 +1322,84 @@ describe("BasicElementMapper", function() {
       };
 
       // act
-      const act = mapper.intermediateToOutput(input);
+      const act = await mapper.intermediateToOutput(input);
 
       // assert
       act.should.deep.equal(expected);
 
+
+    });
+
+    it("should unwrap coverage delta", async function() {
+
+      // dummy IntermediateEntry data
+      const input: IntermediateEntry = {
+        sha: "1234567890",
+        url: "https://example.com",
+        action: "test",
+        items: [
+          {
+            name: "test",
+            url: "https://example.com",
+            data: {
+              type: "test-coverage",
+              line: 50,
+              branch: 50,
+              statement: 50,
+              function: 50,
+              delta: Some({
+                line: 5,
+                branch: 5,
+                statement: 5,
+                function: 5,
+              }),
+              resultDetails: {
+                fail: [],
+                pass: [],
+                warn: []
+              }
+            }
+          }
+        ]
+      };
+
+      // expected Output data
+      const expected: OutputEntry = {
+        sha: "1234567890",
+        url: "https://example.com",
+        action: "test",
+        items: [
+          {
+            name: "test",
+            url: "https://example.com",
+            data: {
+              type: "test-coverage",
+              line: 50,
+              branch: 50,
+              statement: 50,
+              function: 50,
+              delta: {
+                line: 5,
+                branch: 5,
+                statement: 5,
+                function: 5,
+              },
+              resultDetails: {
+                fail: [],
+                pass: [],
+                warn: []
+              },
+              result: "pass"
+            }
+          }
+        ]
+      };
+
+      // act
+      const act = await mapper.intermediateToOutput(input);
+
+      // assert
+      act.should.deep.equal(expected);
 
     });
 
@@ -1337,7 +1410,7 @@ describe("BasicElementMapper", function() {
     describe("test-result", function() {
 
       describe("pass", function() {
-        it("should convert IntermediateElement to OutputMetadata", function() {
+        it("should convert IntermediateElement to OutputMetadata", async function() {
 
           // dummy IntermediateElement data
           const input: IntermediateElement = {
@@ -1379,7 +1452,7 @@ describe("BasicElementMapper", function() {
           };
 
           // act
-          const act = mapper.toOutputMetadata(input);
+          const act = await mapper.toOutputMetadata(input);
 
           // assert
           act.should.deep.equal(expected);
@@ -1389,7 +1462,7 @@ describe("BasicElementMapper", function() {
       });
 
       describe("warn", function() {
-        it("should convert IntermediateElement to OutputMetadata", function() {
+        it("should convert IntermediateElement to OutputMetadata", async function() {
 
           // dummy IntermediateElement data
           const input: IntermediateElement = {
@@ -1437,7 +1510,7 @@ describe("BasicElementMapper", function() {
           };
 
           // act
-          const act = mapper.toOutputMetadata(input);
+          const act = await mapper.toOutputMetadata(input);
 
           // assert
           act.should.deep.equal(expected);
@@ -1447,7 +1520,7 @@ describe("BasicElementMapper", function() {
       });
 
       describe("fail", function() {
-        it("should convert IntermediateElement to OutputMetadata", function() {
+        it("should convert IntermediateElement to OutputMetadata", async function() {
 
           // dummy IntermediateElement data
           const input: IntermediateElement = {
@@ -1497,7 +1570,7 @@ describe("BasicElementMapper", function() {
           };
 
           // act
-          const act = mapper.toOutputMetadata(input);
+          const act = await mapper.toOutputMetadata(input);
 
           // assert
           act.should.deep.equal(expected);
@@ -1545,7 +1618,7 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
-              delta: None(),
+              delta: null,
               resultDetails: {
                 fail: [],
                 pass: [
@@ -1559,7 +1632,7 @@ describe("BasicElementMapper", function() {
           };
 
           // act
-          const act = mapper.toOutputMetadata(input);
+          const act = await mapper.toOutputMetadata(input);
 
           // assert
           await act.should.be.congruent(expected);
@@ -1612,12 +1685,12 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
-              delta: Some({
+              delta: {
                 line: -20,
                 statement: 24,
                 branch: 40,
                 function: 80
-              }),
+              },
               resultDetails: {
                 fail: [
                   "min-test-result"
@@ -1635,7 +1708,7 @@ describe("BasicElementMapper", function() {
           };
 
           // act
-          const act = mapper.toOutputMetadata(input);
+          const act = await mapper.toOutputMetadata(input);
 
           // assert
           await act.should.be.congruent(expected);
@@ -1678,7 +1751,7 @@ describe("BasicElementMapper", function() {
               function: 100,
               branch: 100,
               line: 100,
-              delta: None(),
+              delta: null,
               resultDetails: {
                 fail: [],
                 pass: [],
@@ -1691,7 +1764,7 @@ describe("BasicElementMapper", function() {
           };
 
           // act
-          const act = mapper.toOutputMetadata(input);
+          const act = await mapper.toOutputMetadata(input);
 
           // assert
           await act.should.be.congruent(expected);
@@ -1704,7 +1777,7 @@ describe("BasicElementMapper", function() {
 
     describe("documentation", function() {
 
-      it("should convert IntermediateElement to OutputMetadata", function() {
+      it("should convert IntermediateElement to OutputMetadata", async function() {
 
         // dummy IntermediateElement data
         const input: IntermediateElement = {
@@ -1736,7 +1809,7 @@ describe("BasicElementMapper", function() {
         };
 
         // act
-        const act = mapper.toOutputMetadata(input);
+        const act = await mapper.toOutputMetadata(input);
 
         // assert
         act.should.deep.equal(expected);
@@ -1748,7 +1821,7 @@ describe("BasicElementMapper", function() {
     describe("code-quality", function() {
 
 
-      it("should convert IntermediateElement to OutputMetadata", function() {
+      it("should convert IntermediateElement to OutputMetadata", async function() {
 
         // dummy IntermediateElement data
         const input: IntermediateElement = {
@@ -1783,7 +1856,7 @@ describe("BasicElementMapper", function() {
         };
 
         // act
-        const act = mapper.toOutputMetadata(input);
+        const act = await mapper.toOutputMetadata(input);
 
         // assert
         act.should.deep.equal(expected);
