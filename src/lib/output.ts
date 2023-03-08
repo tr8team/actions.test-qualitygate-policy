@@ -47,7 +47,15 @@ type IntermediateElement = { data: IntermediateMetadata } & Input;
 
 type IntermediateEntry = { items: IntermediateElement[] } & HistoryEntry;
 
-type OutputMetadata = IntermediateMetadata & { result: PolicyResult };
+type OutputTestCoverageMetadata = TestCoverageMetadata & {
+  delta: CoverageDelta | null;
+  resultDetails: PolicyData;
+};
+
+type OutputMetadata = (
+  | Exclude<IntermediateMetadata, IntermediateTestCoverageMetadata>
+  | OutputTestCoverageMetadata
+) & { result: PolicyResult };
 
 type OutputElement = { data: OutputMetadata } & Input;
 
