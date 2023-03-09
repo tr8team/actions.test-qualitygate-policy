@@ -21,10 +21,10 @@ class IoInputRetriever implements InputRetriever {
       Option<HistoryEntry>,
       Error
     > = this.#io.getOptionalObject("base", Some(this.#historyEntryValidator));
-    const history: Result<History, Error> = this.#io.getObject(
-      "history",
-      Some(this.#historyValidator)
-    );
+
+    const history: Result<History, Error> = this.#io
+      .getOptionalObject("history", Some(this.#historyValidator))
+      .map(async (x) => await x.unwrapOr([]));
     const policyConfigs: Result<PolicyConfigs, Error> = this.#io.getObject(
       "policies",
       Some(this.#policyConfigsValidator)

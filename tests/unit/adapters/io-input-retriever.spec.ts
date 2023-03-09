@@ -4,7 +4,7 @@ import helper from "../../helper";
 import { ActionInput, InputRetriever } from "../../../src/lib/interface/input-retriever";
 import { Err, Ok, Result } from "../../../src/lib/core/result";
 import { History, HistoryEntry } from "../../../src/lib/history";
-import { None, Option } from "../../../src/lib/core/option";
+import { None, Option, Some } from "../../../src/lib/core/option";
 import { PolicyConfigs } from "../../../src/lib/policy-config";
 import { anything, instance, mock, when } from "ts-mockito";
 import { ActionIO } from "../../../src/lib/interface/io";
@@ -18,7 +18,7 @@ chai.use(helper);
 function buildMock(
   current: Result<HistoryEntry, Error>,
   base: Result<Option<HistoryEntry>, Error>,
-  history: Result<History, Error>,
+  history: Result<Option<History>, Error>,
   policies: Result<PolicyConfigs,Error>,
 ): InputRetriever {
   const ioMock = mock<ActionIO>();
@@ -27,7 +27,7 @@ function buildMock(
   const pcvMock = mock<Validator<PolicyConfigs>>()
   when(ioMock.getObject("current", anything())).thenReturn(current);
   when(ioMock.getOptionalObject("base", anything())).thenReturn(base);
-  when(ioMock.getObject("history", anything())).thenReturn(history);
+  when(ioMock.getOptionalObject("history", anything())).thenReturn(history);
   when(ioMock.getObject("policies", anything())).thenReturn(policies);
 
   const io = instance(ioMock);
@@ -52,7 +52,7 @@ describe("io-input-retriever", () => {
           action: "hello"
         }),
         Ok(None()),
-        Ok([] as History),
+        Ok(Some([] as History)),
         Ok([] as PolicyConfigs)
       )
       const expected: ActionInput = {
@@ -78,7 +78,7 @@ describe("io-input-retriever", () => {
         Err(new Error("current invalid")),
 
         Ok(None()),
-        Ok([] as History),
+        Ok(Some([] as History)),
         Ok([] as PolicyConfigs)
       )
       const expected= "current invalid";
@@ -99,7 +99,7 @@ describe("io-input-retriever", () => {
           action: "hello"
         }),
         Err(new Error("base invalid")),
-        Ok([] as History),
+        Ok(Some([] as History)),
         Ok([] as PolicyConfigs)
       )
       const expected= "base invalid";
@@ -141,7 +141,7 @@ describe("io-input-retriever", () => {
           action: "hello"
         }),
         Ok(None()),
-        Ok([] ),
+        Ok(None()),
         Err(new Error("policies invalid")),
       )
       const expected= "policies invalid";
